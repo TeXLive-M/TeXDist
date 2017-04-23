@@ -1,0 +1,101 @@
+#!/usr/bin/perl
+
+$ENV{PATH} = "/usr/bin:/bin:/usr/sbin:/sbin";
+
+my $scriptdirname = $0;
+my $pathtoadd = $ARGV[0];
+my $protectarg = $ARGV[1];
+my $optionarg = $ARGV[2];
+
+$protectstring = (defined( $protectarg) ? $protectarg : "setloginpath");
+$removeonly = $optionarg =~ /^remove$/;
+
+($scriptdirname) = $scriptdirname =~ /([A-Za-z\._\-\/ ]+)/;
+$scriptdirname=`/usr/bin/dirname $scriptdirname`;
+chomp( $scriptdirname);
+if ($scriptdirname ne "") {
+    chdir( "$scriptdirname") or die "Cannot chdir to $scriptdirname\n";
+}
+else {
+    warn "Empty scriptdirname \"$scriptdirname\"\n";
+}
+
+$exitval = 0;
+
+&adapt_login( "/etc/csh.login", "csh", $pathtoadd, $protectstring, $removeonly);
+&adapt_login( "/etc/profile", "sh", $pathtoadd, $protectstring, $removeonly);
+
+if ($exitval) {
+    warn "There were $exitval errors. Please read the warning messages,\n";
+}
+
+exit $exitval;
+
+sub adapt_login {
+    my $loginfilename = shift;
+    my $logintype = shift;
+    my $directory = shift;
+    my $protectstring = shift;
+    my $removeonly = shift;
+
+    if ($logintype ne "csh" and $logintype ne "sh") {
+	warn "Cannot determine proper login type of $loginfilename ($logintype??).\n";
+	$exitval++;
+	return;
+    }
+
+    if (open LOGIN, "<$loginfilename") {
+	@loginfile = <LOGIN>;
+	close LOGIN;
+
+	$setloginpathfound = 0;
+	if (open( LOGIN, ">$loginfilename")) {
+	    foreach $line (@loginfile) {
+		if ($line =~ /^## $protectstring (added \S+|modifications) end at/) {
+		    # warn "Skipping ending with $line";
+		    $setloginpathfound = 0;
+		    next;
+		}
+		next if ($setloginpathfound);
+		if ($line =~ /^## $protectstring (added \S+|modifications) start at/) {
+		    # warn "Skipping starting with $line";
+		    $setloginpathfound = 1;
+		    next;
+		}
+		print LOGIN $line;
+	    }
+	    close LOGIN;
+
+	    if (not $removeonly) {
+		$date = `date`;
+
+		print "$0: Applying path addition of $directory to $loginfilename\n";
+		open LOGIN, ">>$loginfilename" or die "Cannot append to login file $loginfilename. Weird!";
+		print LOGIN "## $protectstring added $directory start at $date## Do not remove the previous line\n";
+		if ($logintype eq "csh") {
+		    print LOGIN "if (\"\${uid}\" != \"0\") then\n";
+		    print LOGIN "  set path = ( \${path} \"$directory\" )\n";
+		    print LOGIN "endif\n";
+		}
+		else {
+		    print LOGIN "if [ `whoami` != \"root\" ]\nthen\n";
+		    print LOGIN "  PATH=\"\$PATH:$directory\"\n";
+		    print LOGIN "  export PATH\n";
+		    print LOGIN "fi\n";
+		}
+		print LOGIN "## Do not remove the next line\n## $protectstring added $directory end at $date";
+		close LOGIN;
+	    }
+	}
+	else {
+	    warn "You do not have write permissions on $loginfilename. PATH has not been set. Run with administrator access.\n";
+	    $exitval++;
+	}
+    }
+    else {
+	warn "Cannot read system-wide csh login file $loginfilename. PATH has not been set.\n";
+	$exitval++;
+    }
+}
+
+# $Id: setloginpath 42 2005-12-28 22:57:55Z gctwnl $

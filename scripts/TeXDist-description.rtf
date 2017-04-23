@@ -1,0 +1,537 @@
+{\rtf1\mac\ansicpg10000\cocoartf824\cocoasubrtf420
+{\fonttbl\f0\fswiss\fcharset77 Helvetica;\f1\fswiss\fcharset77 Helvetica-Oblique;\f2\fswiss\fcharset77 Helvetica-BoldOblique;
+\f3\fswiss\fcharset77 Helvetica-Bold;\f4\fmodern\fcharset77 CourierNewPSMT;\f5\fmodern\fcharset77 Courier;
+}
+{\colortbl;\red255\green255\blue255;\red255\green0\blue0;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww17680\viewh17720\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\ql\qnatural\pardirnatural
+
+\f0\fs36 \cf0 Description of the TeXDist directory structure. Version 1. \
+
+\fs24 \
+This structure is meant to provide an abstraction of various TeX installs that may reside anywhere on Disk (e.g. in /sw for Fink, /usr/local/texlive/2005 fo TeX Live 2005, /opt for DarwinPorts, etc.)\
+\
+
+\f1\i \cf2 Warning: this document is for Unix-savvy people only and has as its main goal the documentation of a technical solution, 
+\f2\b not
+\f1\b0  the use of this solution (which is quite simple). As an ordinary end user, you will hardly have to know or understand any of this, except maybe for the part about the texdist program below, which you may want to use as an end user if you have multiple TeX distributions on your system. This will however better be explained elsewhere without the confusing technical stuff here.\
+
+\f0\i0 \cf0 \
+
+\f3\b TeXDist directory structure contents\
+
+\f0\b0 \
+The TeXDist directory structure format contains a Contents subdirectory.\
+\
+The Foo/Contents subdirectory contains\
+- A 
+\f4 Root
+\f0  symbolic link. This links to the root of the TeX distribution. E.g. for TeX Live 2005, this is 
+\f4 /usr/local/texlive/2005
+\f0  and for gwTeX (2006) this is 
+\f4 /usr/local/gwTeX
+\f0 .\
+- A 
+\f4 Programs
+\f0  subdirectory. This subdirectory contains links to the actual directories of the binaries and scripts, one link for each hardware architecture. For gwTeX, this is 
+\f4 ../Root/bin/powerpc-apple-darwin-current
+\f0  for powerpc and 
+\f4 ../Root/bin/i386-apple-darwin-current
+\f0  for x86. If a future distribution would have universal binaries, each link for an architecture would point to the same directory containing the universal binaries. With links for each architecture, the TeXDist directory structure becomes a kowledge base/abstraction for how a TeX distribution looks, but it does not contain the 
+\f1\i actual
+\f0\i0  situation of the TeX distribution it points to.\
+One remark on the root: there are two ways of creating the Root link in the TeXDist directory structure: absolute and relative:\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\li580\ql\qnatural\pardirnatural
+\cf0 - If the link inside the TeXDist directory structure is relative (e.g. 
+\f4 ../../../../../usr/local/gwTeX
+\f0 ), it will work independently form the mount point of the volume. E.g. if you boot from another disk and your original Startup Disk with gwTeX installed is mounted as 
+\f4 /Volumes/MyOtherStartupDisk
+\f0 , you can still use the TeXDist directory structure to get to your TeX on your MyOtherStartupDisk volume. But when you change the location of the TeXDist directory structure within your volume, it probably will  not be correct anymore as it points to a TeX relative to its own position in the directory hierarchy.\
+- If the link inside the TeXDist directory structure is absolute (e.g. 
+\f4 /usr/local/gwTeX
+\f0 ) it will not work anymore when you boot form another disk. But you can move the TeXDist directory structure around when booted from the disk that has TeX in the absolute location (e.g. 
+\f4 /usr/local/gwTeX
+\f0 ) and the TeXDist directory structure will still have the correct information.\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\ql\qnatural\pardirnatural
+\cf0 The preferred way is relative as moving these structures around is problematic anyway (because they are used as the basis for a bundle approach as well, see below).\
+- A 
+\f4 TexmfLocal
+\f0  symbolic link. The TexmfLocal directory is where local additions are kept that are normally independent from the distribution version. On a pre-2006 gwTeX this is 
+\f4 ../Root/share/texmf.local
+\f0 , on TeX Live the default for this is 
+\f4 ../Root/../texmf-local
+\f0  and on a current gwTeX this is 
+\f4 ../Root/texmf.pkgs
+\f0 \
+- A 
+\f4 TexmfSysVar
+\f0  symbolic link. The TexmfSysVar directory is where distribution-dependent files are kept, amongst which the results of the updmap, fmtutil, texconfig, etc. commands as well as the compiled formats. On a pre-2006 gwTeX this is 
+\f4 ../Root/share/texmf.local
+\f0 , on TeX Live this is 
+\f4 ../Root/texmf-var
+\f0  and on a current gwTeX this is 
+\f4 ../Root/texmf.local
+\f0  (note that gwTeX and TeX Live both did split the texmf-local tree, but that they both use texmf-local for a different part of the split. Te abstraction offered here (
+\f4 TexmfSysVar
+\f0  and 
+\f4 TexmfLocal
+\f0 ) hides that distinction.\
+- A 
+\f4 Developer
+\f0  subdirectory if developer resourcs like libraries and C include files ara available. Inside 
+\f4 Developer
+\f0  there is a 
+\f4 Lib
+\f0  and an Include subdirectory which both contain symbolic links for the respective directories in the distribution. Links are given for each architecture (i386 and powerpc), if the resources in the distribution are universal (as is the case in gwTeX), both will point to the same directory.\
+- An 
+\f4 AllTexmf
+\f0  subdirectory that contains links to all the texmf trees that are active in this distribution.\
+- A 
+\f4 Doc
+\f0  subirectory that contains links to all doc subdirectories of all texmf trees of the distrubution.\
+\
+
+\f3\b TeXDist directory structure setup on your system\
+
+\f0\b0 \
+The TeXDist directory structures normally live inside your distribution, e.g. in 
+\f4 /usr/local/gwTeX/texdist
+\f0  for gwTeX. Also there, a directory .
+\f4 DefaultTeX
+\f0  should be created that contains a link Content that links to a Content inside a TeXdist directory structure (or bundle, see below). Furthermore, a link 
+\f4 /usr/texbin
+\f0  should be set up which should link to 
+\f4 ../Library/TeX/Distributions/.DefaultTeX/Contents/Programs/i386
+\f0  on intel systems and 
+\f4 ../Library/TeX/Distributions/.DefaultTeX/Contents/Programs/powerpc
+\f0  on ppc systems. This is a system architecture dependent link to the appropriate binaries for your system and this is why it lives in 
+\f4 /usr
+\f0 , next to 
+\f4 /usr/bin
+\f0  and 
+\f4 /usr/sbin
+\f0 , etc. 
+\f4 /usr/texbin
+\f0  should be used to change system-wide PATH settings and can be used to set a system-specific TeX PATH in your frontend preferences.\
+\
+Man entries can be used like this (entries in your man configuration file)\
+
+\f4 	MANPATH /Library/TeX/Distributions/.DefaultTeX/Contents/Man\
+	MANPATH_MAP /usr/texbin /Library/TeX/Distributions/.DefaultTeX/Contents/Man\
+
+\f0 These will make the current active TeX available via the man command and will make searching for these fast. The gwTeX i-Package takes care of this.\
+\
+
+\f3\b TeXDist directory structure usage\
+
+\f0\b0 \
+What does this all do?\
+\
+As said earlier, TeXDist directory structures are meant to be descriptions of TeX distributions on your system. Their content is only an abstraction of the capabilities of the distribution, but not the actualities. E.g., if a user installs gwTeX without the man pages, the link 
+\f4 gwTeX/Contents/Man
+\f0  will be nonfunctional. It is also for  this reason that the programs and developer entries are split into pointers for each architecture. That means that from the TeXDist directory structure itself, no direct information can be gained that describes where to find the architecture-dependent stuff for the 
+\f1\i actual
+\f0\i0  architecture the TeXDist directory structure resides on. There are two other ways this can be achieved:\
+	1. As above with 
+\f4 /usr/texbin
+\f0 .\
+	2. Frontends can directly use 
+\f4 /Library/TeX/.Distributions/DefaultTeX/Contents/Programs/powerpc
+\f0  or 
+\f4 /Library/TeX/.Distributions/DefaultTeX/Contents/Programs/i386
+\f0 . \
+\
+
+\f3\b .texdist bundle interface to the TeXDist directory structure
+\f0\b0 \
+\
+In 
+\f4 /Library/TeX/Distributions
+\f0  you will find Foo.texdist directories. This is the central repositry of TeX DIstribution information in .texdist bundles.\
+\
+As soon as the first program that claims to recognize .texdist is installed on a system, the .texdist bundles will change to real objects in the Finder and in standard Apple Open panels. Changing distribution will be as easy for the end user as opening the .texdist bundle with the frontend. If the user selects, say, 
+\f4 /Library/TeX/Distributions/TeXLive-2005.texdist
+\f0 , the frontend (when running on an intel machine) will select 
+\f4 /Library/TeX/.Distributions/TeXLive-2005/Contents/Programs/i386
+\f0  as its TeX programs path. This could even be set per-document, e.g. you have your old project that compiles perfectly with TeX Live 2003 but not with a more modern TeX, just tell your frontend to compile it with the older distribution.\
+\
+All 
+\f4 /Library/TeX/Distributions/Foo.texdist/Contents
+\f0  are links that link to a 
+\f4 Contents
+\f0  folder inside a TeXDist structure. Normally, a TeX distribution will carry its own structure, e.g. gwTeX contains 
+\f4 /usr/local/gwTeX/texdist/gwTeX
+\f0  and 
+\f4 /Library/TeX/Distributions/gwTeX.texdist/Contents
+\f0  links to 
+\f4 /usr/local/gwTeX/texdist/gwTeX/Contents
+\f0 .\
+\
+For older distributions that do not carry their own TeXDist structures, there are "Factory Default" TeXDist structures in 
+\f4 /Library/TeX/Distributions/.FactoryDefaults
+\f0 . These provide he abstractions for distributions like TeX Live 2004 \'d0 2006 and gwTeX 2003 \'d0 2005 when installed with default choises (e.g. TL 2005 installs in 
+\f4 /usr/local/texlive/2005
+\f0  and the shared texmf-local tree lives in 
+\f4 /usr/local/texlive
+\f0 ). Access via .texdist bundles in /Library/TeX/Distributions to the factory defaults are provided.\
+\
+
+\f3\b System wide settings
+\f0\b0 \
+\
+Changing the system-wide TeX distribution in use requires one simple change: Soft Linking 
+\f4 /Library/TeX/Distributions/.DefaultTeX/Contents
+\f0  to the inside of one of the available TeXDist directory structures. E.g., in a shell command this would be\
+
+\f4 	sudo rm /Library/TeX/Distributions/.DefaultTeX/Contents\
+	sudo ln -s ../gwTeX.texdist/Contents /Library/TeX/Distributions/.DefaultTeX\
+
+\f0 and your system-wide setup would be gwTeX. Note that this does not guarantee that the underlying TeX distribution is available.\
+\
+If the PATH entry for your shell is extended with
+\f4  /usr/texbin
+\f0  (the gwTeX i-Package, hopefully amongst others, sets this up) and your MANPATH with 
+\f4 /Library/TeX/Distrbutions/.DefaultTeX/Man
+\f0  (ditto), any change you make in the selection of the system-wide default TeX distribution is automatically picked up on the command line. No need to change command line settings anymore.\
+\
+
+\f3\b The texdist program\
+
+\f0\b0 \
+A script named texdist is placed in /Library/TeX/.scripts (invisible in the Finder) and it is symlinked from /usr/local/bin. The script provides an interface to the TeX Distribution structures. Basic functions are listing and running commands. E.g.\
+\
+
+\f4 	texdist gwTeX "kpsewhich fmtutil.cnf"\
+
+\f0 \
+will run the "kpsewhich fmtutil.cnf" command with the gwTeX distribution, while\
+\
+
+\f4 	texdist TeXLive-2005 "kpsewhich fmtutil.cnf"\
+
+\f0 \
+will do the same with the TeX Live 2005 distribution. See "texdist --usage" for complete instructions.\
+\
+
+\f3\b Example long directory listing for /usr/texbin and /Library/TeX on an Intel Mac\
+
+\f0\b0 \
+
+\f4 lrwxr-xr-x   1 root  wheel  63 Dec 14 22:07 /usr/texbin -> ../Library/TeX/Distributions/.DefaultTeX/Contents/Programs/i386\
+\
+/Library/TeX:\
+total 16\
+drwxr-xr-x    6 root  admin   204 Dec 14 18:16 .\
+drwxrwxr-t   48 root  admin  1632 Dec 14 18:16 ..\
+drwxr-xr-x    3 root  admin   102 Dec 14 18:16 .scripts\
+drwxr-xr-x   10 root  admin   340 Dec 14 22:07 Distributions\
+lrwxr-xr-x    1 root  admin    38 Dec 14 18:16 Documentation -> Distributions/.DefaultTeX/Contents/Doc\
+lrwxr-xr-x    1 root  admin    39 Dec 14 18:16 Root -> Distributions/.DefaultTeX/Contents/Root\
+\
+/Library/TeX/.scripts:\
+total 24\
+drwxr-xr-x   3 root    admin    102 Dec 14 18:16 .\
+drwxr-xr-x   6 root    admin    204 Dec 14 18:16 ..\
+-rwxr-xr-x   1 gerben  gerben  8300 Dec 14 22:04 texdist\
+\
+/Library/TeX/Distributions:\
+total 32\
+drwxr-xr-x   10 root  admin    340 Dec 14 22:07 .\
+drwxr-xr-x    6 root  admin    204 Dec 14 18:16 ..\
+drwxr-xr-x    3 root  admin    102 Dec 14 18:16 .DefaultTeX\
+drwxr-xr-x    6 root  admin    204 Dec 14 22:07 .FactoryDefaults\
+-rw-r--r--    1 root  admin  15311 Dec 14 18:16 TeXDist-description.rtf\
+drwxr-xr-x    3 root  admin    102 Dec 14 18:16 TeXLive-2004.texdist\
+drwxr-xr-x    3 root  admin    102 Dec 14 18:16 TeXLive-2005.texdist\
+drwxr-xr-x    3 root  admin    102 Dec 14 18:16 TeXLive-2006.texdist\
+drwxr-xr-x    3 root  admin    102 Dec 14 18:16 gwTeX-2003-2005.texdist\
+drwxr-xr-x    3 root  admin    102 Dec 14 22:07 gwTeX.texdist\
+\
+/Library/TeX/Distributions/.DefaultTeX:\
+total 8\
+drwxr-xr-x    3 root  admin  102 Dec 14 18:16 .\
+drwxr-xr-x   10 root  admin  340 Dec 14 22:07 ..\
+lrwxr-xr-x    1 root  admin   25 Dec 14 18:16 Contents -> ../gwTeX.texdist/Contents\
+\
+/Library/TeX/Distributions/.FactoryDefaults:\
+total 0\
+drwxr-xr-x    6 root  admin  204 Dec 14 22:07 .\
+drwxr-xr-x   10 root  admin  340 Dec 14 22:07 ..\
+drwxr-xr-x    3 root  admin  102 Dec 14 22:07 TeXLive-2004\
+drwxr-xr-x    3 root  admin  102 Dec 14 22:07 TeXLive-2005\
+drwxr-xr-x    3 root  admin  102 Dec 14 22:07 TeXLive-2006\
+drwxr-xr-x    3 root  admin  102 Dec 14 22:07 gwTeX-2003-2005\
+\
+/Library/TeX/Distributions/.FactoryDefaults/TeXLive-2004:\
+total 0\
+drwxr-xr-x    3 root  admin  102 Dec 14 22:07 .\
+drwxr-xr-x    6 root  admin  204 Dec 14 22:07 ..\
+drwxr-xr-x   11 root  admin  374 Dec 14 22:07 Contents\
+\
+/Library/TeX/Distributions/.FactoryDefaults/TeXLive-2004/Contents:\
+total 48\
+drwxr-xr-x   11 root  admin  374 Dec 14 22:07 .\
+drwxr-xr-x    3 root  admin  102 Dec 14 22:07 ..\
+drwxr-xr-x    7 root  admin  238 Dec 14 22:07 AllTexmf\
+drwxr-xr-x    6 root  admin  204 Dec 14 22:07 Doc\
+lrwxr-xr-x    1 root  admin   55 Dec 14 22:07 Info -> ../../../../../../usr/local/texlive/2004/texmf/doc/info\
+lrwxr-xr-x    1 root  admin   54 Dec 14 22:07 Man -> ../../../../../../usr/local/texlive/2004/texmf/doc/man\
+drwxr-xr-x    4 root  admin  136 Dec 14 22:07 Programs\
+lrwxr-xr-x    1 root  admin   23 Dec 14 22:07 Root -> /usr/local/texlive/2004\
+-rw-r--r--    1 root  admin    2 Dec 14 22:07 TeXDistVersion\
+lrwxr-xr-x    1 root  admin   47 Dec 14 22:07 TexmfLocal -> ../../../../../../usr/local/texlive/texmf-local\
+lrwxr-xr-x    1 root  admin   50 Dec 14 22:07 TexmfSysVar -> ../../../../../../usr/local/texlive/2004/texmf-var\
+\
+/Library/TeX/Distributions/.FactoryDefaults/TeXLive-2004/Contents/AllTexmf:\
+total 40\
+drwxr-xr-x    7 root  admin  238 Dec 14 22:07 .\
+drwxr-xr-x   11 root  admin  374 Dec 14 22:07 ..\
+lrwxr-xr-x    1 root  admin   50 Dec 14 22:07 texmf -> ../../../../../../..//usr/local/texlive/2004/texmf\
+lrwxr-xr-x    1 root  admin   55 Dec 14 22:07 texmf-dist -> ../../../../../../..//usr/local/texlive/2004/texmf-dist\
+lrwxr-xr-x    1 root  admin   54 Dec 14 22:07 texmf-doc -> ../../../../../../..//usr/local/texlive/2004/texmf-doc\
+lrwxr-xr-x    1 root  admin   51 Dec 14 22:07 texmf-local -> ../../../../../../..//usr/local/texlive/texmf-local\
+lrwxr-xr-x    1 root  admin   54 Dec 14 22:07 texmf-var -> ../../../../../../..//usr/local/texlive/2004/texmf-var\
+\
+/Library/TeX/Distributions/.FactoryDefaults/TeXLive-2004/Contents/Doc:\
+total 32\
+drwxr-xr-x    6 root  admin  204 Dec 14 22:07 .\
+drwxr-xr-x   11 root  admin  374 Dec 14 22:07 ..\
+lrwxr-xr-x    1 root  admin   55 Dec 14 22:07 texmf-dist-doc -> ../../../../../../..//usr/local/texlive/2004/texmf-dist\
+lrwxr-xr-x    1 root  admin   50 Dec 14 22:07 texmf-doc -> ../../../../../../..//usr/local/texlive/2004/texmf\
+lrwxr-xr-x    1 root  admin   54 Dec 14 22:07 texmf-doc-doc -> ../../../../../../..//usr/local/texlive/2004/texmf-doc\
+lrwxr-xr-x    1 root  admin   54 Dec 14 22:07 texmf-var-doc -> ../../../../../../..//usr/local/texlive/2004/texmf-var\
+\
+/Library/TeX/Distributions/.FactoryDefaults/TeXLive-2004/Contents/Programs:\
+total 16\
+drwxr-xr-x    4 root  admin  136 Dec 14 22:07 .\
+drwxr-xr-x   11 root  admin  374 Dec 14 22:07 ..\
+lrwxr-xr-x    1 root  admin   59 Dec 14 22:07 i386 -> ../../../../../../../usr/local/texlive/2004/bin/i386-darwin\
+lrwxr-xr-x    1 root  admin   64 Dec 14 22:07 powerpc -> ../../../../.././../../usr/local/texlive/2004/bin/powerpc-darwin\
+\
+/Library/TeX/Distributions/.FactoryDefaults/TeXLive-2005:\
+total 0\
+drwxr-xr-x    3 root  admin  102 Dec 14 22:07 .\
+drwxr-xr-x    6 root  admin  204 Dec 14 22:07 ..\
+drwxr-xr-x   11 root  admin  374 Dec 14 22:07 Contents\
+\
+/Library/TeX/Distributions/.FactoryDefaults/TeXLive-2005/Contents:\
+total 48\
+drwxr-xr-x   11 root  admin  374 Dec 14 22:07 .\
+drwxr-xr-x    3 root  admin  102 Dec 14 22:07 ..\
+drwxr-xr-x    7 root  admin  238 Dec 14 22:07 AllTexmf\
+drwxr-xr-x    6 root  admin  204 Dec 14 22:07 Doc\
+lrwxr-xr-x    1 root  admin   55 Dec 14 22:07 Info -> ../../../../../../usr/local/texlive/2005/texmf/doc/info\
+lrwxr-xr-x    1 root  admin   54 Dec 14 22:07 Man -> ../../../../../../usr/local/texlive/2005/texmf/doc/man\
+drwxr-xr-x    4 root  admin  136 Dec 14 22:07 Programs\
+lrwxr-xr-x    1 root  admin   23 Dec 14 22:07 Root -> /usr/local/texlive/2005\
+-rw-r--r--    1 root  admin    2 Dec 14 22:07 TeXDistVersion\
+lrwxr-xr-x    1 root  admin   47 Dec 14 22:07 TexmfLocal -> ../../../../../../usr/local/texlive/texmf-local\
+lrwxr-xr-x    1 root  admin   50 Dec 14 22:07 TexmfSysVar -> ../../../../../../usr/local/texlive/2005/texmf-var\
+\
+/Library/TeX/Distributions/.FactoryDefaults/TeXLive-2005/Contents/AllTexmf:\
+total 40\
+drwxr-xr-x    7 root  admin  238 Dec 14 22:07 .\
+drwxr-xr-x   11 root  admin  374 Dec 14 22:07 ..\
+lrwxr-xr-x    1 root  admin   50 Dec 14 22:07 texmf -> ../../../../../../..//usr/local/texlive/2005/texmf\
+lrwxr-xr-x    1 root  admin   55 Dec 14 22:07 texmf-dist -> ../../../../../../..//usr/local/texlive/2005/texmf-dist\
+lrwxr-xr-x    1 root  admin   54 Dec 14 22:07 texmf-doc -> ../../../../../../..//usr/local/texlive/2005/texmf-doc\
+lrwxr-xr-x    1 root  admin   51 Dec 14 22:07 texmf-local -> ../../../../../../..//usr/local/texlive/texmf-local\
+lrwxr-xr-x    1 root  admin   54 Dec 14 22:07 texmf-var -> ../../../../../../..//usr/local/texlive/2005/texmf-var\
+\
+/Library/TeX/Distributions/.FactoryDefaults/TeXLive-2005/Contents/Doc:\
+total 32\
+drwxr-xr-x    6 root  admin  204 Dec 14 22:07 .\
+drwxr-xr-x   11 root  admin  374 Dec 14 22:07 ..\
+lrwxr-xr-x    1 root  admin   55 Dec 14 22:07 texmf-dist-doc -> ../../../../../../..//usr/local/texlive/2005/texmf-dist\
+lrwxr-xr-x    1 root  admin   50 Dec 14 22:07 texmf-doc -> ../../../../../../..//usr/local/texlive/2005/texmf\
+lrwxr-xr-x    1 root  admin   54 Dec 14 22:07 texmf-doc-doc -> ../../../../../../..//usr/local/texlive/2005/texmf-doc\
+lrwxr-xr-x    1 root  admin   54 Dec 14 22:07 texmf-var-doc -> ../../../../../../..//usr/local/texlive/2005/texmf-var\
+\
+/Library/TeX/Distributions/.FactoryDefaults/TeXLive-2005/Contents/Programs:\
+total 16\
+drwxr-xr-x    4 root  admin  136 Dec 14 22:07 .\
+drwxr-xr-x   11 root  admin  374 Dec 14 22:07 ..\
+lrwxr-xr-x    1 root  admin   59 Dec 14 22:07 i386 -> ../../../../../../../usr/local/texlive/2005/bin/i386-darwin\
+lrwxr-xr-x    1 root  admin   64 Dec 14 22:07 powerpc -> ../../../../.././../../usr/local/texlive/2005/bin/powerpc-darwin\
+\
+/Library/TeX/Distributions/.FactoryDefaults/TeXLive-2006:\
+total 0\
+drwxr-xr-x    3 root  admin  102 Dec 14 22:07 .\
+drwxr-xr-x    6 root  admin  204 Dec 14 22:07 ..\
+drwxr-xr-x   11 root  admin  374 Dec 14 22:07 Contents\
+\
+/Library/TeX/Distributions/.FactoryDefaults/TeXLive-2006/Contents:\
+total 48\
+drwxr-xr-x   11 root  admin  374 Dec 14 22:07 .\
+drwxr-xr-x    3 root  admin  102 Dec 14 22:07 ..\
+drwxr-xr-x    7 root  admin  238 Dec 14 22:07 AllTexmf\
+drwxr-xr-x    6 root  admin  204 Dec 14 22:07 Doc\
+lrwxr-xr-x    1 root  admin   55 Dec 14 22:07 Info -> ../../../../../../usr/local/texlive/2006/texmf/doc/info\
+lrwxr-xr-x    1 root  admin   54 Dec 14 22:07 Man -> ../../../../../../usr/local/texlive/2006/texmf/doc/man\
+drwxr-xr-x    4 root  admin  136 Dec 14 22:07 Programs\
+lrwxr-xr-x    1 root  admin   23 Dec 14 22:07 Root -> /usr/local/texlive/2006\
+-rw-r--r--    1 root  admin    2 Dec 14 22:07 TeXDistVersion\
+lrwxr-xr-x    1 root  admin   47 Dec 14 22:07 TexmfLocal -> ../../../../../../usr/local/texlive/texmf-local\
+lrwxr-xr-x    1 root  admin   50 Dec 14 22:07 TexmfSysVar -> ../../../../../../usr/local/texlive/2006/texmf-var\
+\
+/Library/TeX/Distributions/.FactoryDefaults/TeXLive-2006/Contents/AllTexmf:\
+total 40\
+drwxr-xr-x    7 root  admin  238 Dec 14 22:07 .\
+drwxr-xr-x   11 root  admin  374 Dec 14 22:07 ..\
+lrwxr-xr-x    1 root  admin   50 Dec 14 22:07 texmf -> ../../../../../../..//usr/local/texlive/2006/texmf\
+lrwxr-xr-x    1 root  admin   55 Dec 14 22:07 texmf-dist -> ../../../../../../..//usr/local/texlive/2006/texmf-dist\
+lrwxr-xr-x    1 root  admin   54 Dec 14 22:07 texmf-doc -> ../../../../../../..//usr/local/texlive/2006/texmf-doc\
+lrwxr-xr-x    1 root  admin   51 Dec 14 22:07 texmf-local -> ../../../../../../..//usr/local/texlive/texmf-local\
+lrwxr-xr-x    1 root  admin   54 Dec 14 22:07 texmf-var -> ../../../../../../..//usr/local/texlive/2006/texmf-var\
+\
+/Library/TeX/Distributions/.FactoryDefaults/TeXLive-2006/Contents/Doc:\
+total 32\
+drwxr-xr-x    6 root  admin  204 Dec 14 22:07 .\
+drwxr-xr-x   11 root  admin  374 Dec 14 22:07 ..\
+lrwxr-xr-x    1 root  admin   55 Dec 14 22:07 texmf-dist-doc -> ../../../../../../..//usr/local/texlive/2006/texmf-dist\
+lrwxr-xr-x    1 root  admin   50 Dec 14 22:07 texmf-doc -> ../../../../../../..//usr/local/texlive/2006/texmf\
+lrwxr-xr-x    1 root  admin   54 Dec 14 22:07 texmf-doc-doc -> ../../../../../../..//usr/local/texlive/2006/texmf-doc\
+lrwxr-xr-x    1 root  admin   54 Dec 14 22:07 texmf-var-doc -> ../../../../../../..//usr/local/texlive/2006/texmf-var\
+\
+/Library/TeX/Distributions/.FactoryDefaults/TeXLive-2006/Contents/Programs:\
+total 16\
+drwxr-xr-x    4 root  admin  136 Dec 14 22:07 .\
+drwxr-xr-x   11 root  admin  374 Dec 14 22:07 ..\
+lrwxr-xr-x    1 root  admin   59 Dec 14 22:07 i386 -> ../../../../../../../usr/local/texlive/2006/bin/i386-darwin\
+lrwxr-xr-x    1 root  admin   64 Dec 14 22:07 powerpc -> ../../../../.././../../usr/local/texlive/2006/bin/powerpc-darwin\
+\
+/Library/TeX/Distributions/.FactoryDefaults/gwTeX-2003-2005:\
+total 0\
+drwxr-xr-x    3 root  admin  102 Dec 14 22:07 .\
+drwxr-xr-x    6 root  admin  204 Dec 14 22:07 ..\
+drwxr-xr-x   12 root  admin  408 Dec 14 22:07 Contents\
+\
+/Library/TeX/Distributions/.FactoryDefaults/gwTeX-2003-2005/Contents:\
+total 48\
+drwxr-xr-x   12 root  admin  408 Dec 14 22:07 .\
+drwxr-xr-x    3 root  admin  102 Dec 14 22:07 ..\
+drwxr-xr-x    6 root  admin  204 Dec 14 22:07 AllTexmf\
+drwxr-xr-x    4 root  admin  136 Dec 14 22:07 Developer\
+drwxr-xr-x    6 root  admin  204 Dec 14 22:07 Doc\
+lrwxr-xr-x    1 root  admin   38 Dec 14 22:07 Info -> ../../../../../../usr/local/teTeX/info\
+lrwxr-xr-x    1 root  admin   37 Dec 14 22:07 Man -> ../../../../../../usr/local/teTeX/man\
+drwxr-xr-x    4 root  admin  136 Dec 14 22:07 Programs\
+lrwxr-xr-x    1 root  admin   33 Dec 14 22:07 Root -> ../../../../../../usr/local/teTeX\
+-rw-r--r--    1 root  admin    2 Dec 14 22:07 TeXDistVersion\
+lrwxr-xr-x    1 root  admin   51 Dec 14 22:07 TexmfLocal -> ../../../../../../usr/local/teTeX/share/texmf.local\
+lrwxr-xr-x    1 root  admin   51 Dec 14 22:07 TexmfSysVar -> ../../../../../../usr/local/teTeX/share/texmf.local\
+\
+/Library/TeX/Distributions/.FactoryDefaults/gwTeX-2003-2005/Contents/AllTexmf:\
+total 32\
+drwxr-xr-x    6 root  admin  204 Dec 14 22:07 .\
+drwxr-xr-x   12 root  admin  408 Dec 14 22:07 ..\
+lrwxr-xr-x    1 root  admin   48 Dec 14 22:07 texmf -> ../../../../../../../usr/local/teTeX/share/texmf\
+lrwxr-xr-x    1 root  admin   54 Dec 14 22:07 texmf.gwtex -> ../../../../../../../usr/local/teTeX/share/texmf.gwtex\
+lrwxr-xr-x    1 root  admin   54 Dec 14 22:07 texmf.local -> ../../../../../../../usr/local/teTeX/share/texmf.local\
+lrwxr-xr-x    1 root  admin   54 Dec 14 22:07 texmf.tetex -> ../../../../../../../usr/local/teTeX/share/texmf.tetex\
+\
+/Library/TeX/Distributions/.FactoryDefaults/gwTeX-2003-2005/Contents/Developer:\
+total 0\
+drwxr-xr-x    4 root  admin  136 Dec 14 22:07 .\
+drwxr-xr-x   12 root  admin  408 Dec 14 22:07 ..\
+drwxr-xr-x    4 root  admin  136 Dec 14 22:07 Include\
+drwxr-xr-x    4 root  admin  136 Dec 14 22:07 Lib\
+\
+/Library/TeX/Distributions/.FactoryDefaults/gwTeX-2003-2005/Contents/Developer/Include:\
+total 16\
+drwxr-xr-x   4 root  admin  136 Dec 14 22:07 .\
+drwxr-xr-x   4 root  admin  136 Dec 14 22:07 ..\
+lrwxr-xr-x   1 root  admin   47 Dec 14 22:07 i386 -> ../../../../../../../../usr/local/teTeX/include\
+lrwxr-xr-x   1 root  admin   47 Dec 14 22:07 powerpc -> ../../../../../../../../usr/local/teTeX/include\
+\
+/Library/TeX/Distributions/.FactoryDefaults/gwTeX-2003-2005/Contents/Developer/Lib:\
+total 16\
+drwxr-xr-x   4 root  admin  136 Dec 14 22:07 .\
+drwxr-xr-x   4 root  admin  136 Dec 14 22:07 ..\
+lrwxr-xr-x   1 root  admin   43 Dec 14 22:07 i386 -> ../../../../../../../../usr/local/teTeX/lib\
+lrwxr-xr-x   1 root  admin   43 Dec 14 22:07 powerpc -> ../../../../../../../../usr/local/teTeX/lib\
+\
+/Library/TeX/Distributions/.FactoryDefaults/gwTeX-2003-2005/Contents/Doc:\
+total 32\
+drwxr-xr-x    6 root  admin  204 Dec 14 22:07 .\
+drwxr-xr-x   12 root  admin  408 Dec 14 22:07 ..\
+lrwxr-xr-x    1 root  admin   52 Dec 14 22:07 texmf-doc -> ../../../../../../../usr/local/teTeX/share/texmf/doc\
+lrwxr-xr-x    1 root  admin   58 Dec 14 22:07 texmf-gwtex-doc -> ../../../../../../../usr/local/teTeX/share/texmf.gwtex/doc\
+lrwxr-xr-x    1 root  admin   58 Dec 14 22:07 texmf-local-doc -> ../../../../../../../usr/local/teTeX/share/texmf.local/doc\
+lrwxr-xr-x    1 root  admin   58 Dec 14 22:07 texmf-tetex-doc -> ../../../../../../../usr/local/teTeX/share/texmf.tetex/doc\
+\
+/Library/TeX/Distributions/.FactoryDefaults/gwTeX-2003-2005/Contents/Programs:\
+total 16\
+drwxr-xr-x    4 root  admin  136 Dec 14 22:07 .\
+drwxr-xr-x   12 root  admin  408 Dec 14 22:07 ..\
+lrwxr-xr-x    1 root  admin   66 Dec 14 22:07 i386 -> ../../../../../../../usr/local/teTeX/bin/i386-apple-darwin-current\
+lrwxr-xr-x    1 root  admin   69 Dec 14 22:07 powerpc -> ../../../../../../../usr/local/teTeX/bin/powerpc-apple-darwin-current\
+\
+/Library/TeX/Distributions/TeXLive-2004.texdist:\
+total 8\
+drwxr-xr-x    3 root  admin  102 Dec 14 18:16 .\
+drwxr-xr-x   10 root  admin  340 Dec 14 22:07 ..\
+lrwxr-xr-x    1 root  admin   41 Dec 14 18:16 Contents -> ../.FactoryDefaults/TeXLive-2004/Contents\
+\
+/Library/TeX/Distributions/TeXLive-2005.texdist:\
+total 8\
+drwxr-xr-x    3 root  admin  102 Dec 14 18:16 .\
+drwxr-xr-x   10 root  admin  340 Dec 14 22:07 ..\
+lrwxr-xr-x    1 root  admin   41 Dec 14 18:16 Contents -> ../.FactoryDefaults/TeXLive-2005/Contents\
+\
+/Library/TeX/Distributions/TeXLive-2006.texdist:\
+total 8\
+drwxr-xr-x    3 root  admin  102 Dec 14 18:16 .\
+drwxr-xr-x   10 root  admin  340 Dec 14 22:07 ..\
+lrwxr-xr-x    1 root  admin   41 Dec 14 18:16 Contents -> ../.FactoryDefaults/TeXLive-2006/Contents\
+\
+/Library/TeX/Distributions/gwTeX-2003-2005.texdist:\
+total 8\
+drwxr-xr-x    3 root  admin  102 Dec 14 18:16 .\
+drwxr-xr-x   10 root  admin  340 Dec 14 22:07 ..\
+lrwxr-xr-x    1 root  admin   44 Dec 14 18:16 Contents -> ../.FactoryDefaults/gwTeX-2003-2005/Contents\
+\
+/Library/TeX/Distributions/gwTeX.texdist:\
+total 8\
+drwxr-xr-x    3 root  admin  102 Dec 14 22:07 .\
+drwxr-xr-x   10 root  admin  340 Dec 14 22:07 ..\
+lrwxr-xr-x    1 root  admin   50 Dec 14 22:07 Contents -> ../../../../usr/local/gwTeX/texdist/gwTeX/Contents\
+
+\f0 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\ql\qnatural\pardirnatural
+
+\f5 \cf0 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\ql\qnatural\pardirnatural
+
+\f3\b \cf0 .texdist design and distribution issues (GW, 10 December 2006)\
+
+\f0\b0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural\pardirnatural
+\cf0 - Keeping the TeXDist structures in sync with the actual dynamic situation will be a nightmare if they would have to reflect the actual state of a TeX distribution. That goes for internal changes of the actual installations (e.g. does the user have man pages installed or not) and externals (eg. different layouts and locations one can choose on installation of certain TeX distributions. Hence, TeXDist directory structures offer an abstraction that depict a possible distribution layout and I ship .texdist for my own distributions as well as for a couple of TeX Live's when installed from the ISO image choosing a completely default install.\
+- Offering these standard descriptions makes it work for older installations without these installations having to change. E.g., the TL 2005 and earlier ISOs are not going to change. And at this stage, nor is TL2006. So, without me producing official TL TeXDist directory structures for 2005 and 2006, these will not have .texdist support and it will be difficult for users to switch between gwTeX and TL2005 or TL2006 (installed from ISO) in this way.\
+- I have decided in the end against only creating these when the TL install from ISO is already there (this was what I had originally) because it adds to the confusion because the order of install (ISO first gwTeX after or the other way around give different results).\
+- The offered TeXDist structures depict the official default installation. If you do an official install, it will just work.\
+\
+- I have decided on /usr/texbin because /usr/local may be shared between systems of a different architecture, while this is *never* the case for /usr and the /usr/texbin link is hardware-architecture dependent.\
+\
+10 Dec 2006, Gerben Wierda\
+\
+PS. It turns out that Apple's 
+\f4 ls
+\f0  program is somewhat unreliable with symlinks. Any "ls -l" command with an argument with a trailing slash, e.g. "ls -l /usr/texbin/" is supposed to resolve the chain of symlinks to the end and then display the contents of the symlinked directory. There is a bug in Mac OS X up to 10.4.8 at least, where this does not work properly. As a workaround, use "ls -lH" if you want to resolve all symlinks. Both the following commands 
+\f1\i should
+\f0\i0  display the same output:\
+\
+
+\f4 $ ls -l /usr/texbin/\
+lrwxr-xr-x   1 root  admin  37 Dec 10 23:29 /usr/texbin/ -> ../Root/bin/i386-apple-darwin-current\
+\
+$ ls -Hl /usr/texbin\
+total 53416\
+-rwxr-xr-x   1 root    admin    84140 Dec  2 08:08 T1Wrap\
+-rwxr-xr-x   1 root    admin    94232 Dec  2 08:08 a2ping\
+-rwxr-xr-x   1 root    admin    88644 Dec  2 08:08 afm2pl\
+
+\f0 etc.\
+\
+The first one is wrong and displays some intermediate symlink (unresolved) instead of the contents of /usr/texbin (fully resolved).}

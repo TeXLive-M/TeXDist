@@ -1,0 +1,340 @@
+#!/bin/bash
+
+# postflight script for the MacTeX installer
+
+PKG_PATH=$1
+
+
+# Adjust PATH and MANPATH
+
+# Much of this code was copied from Gerben Wierda long ago.
+# Later, Leopard provided more convenient ways to modify the
+# PATH, and this is reflected below. The code has not been touched
+# since Leopard.
+
+manpath="/Library/TeX/Distributions/.DefaultTeX/Contents/Man"
+binpath="/usr/texbin"
+
+# in Leopard, add elements to path and manpath
+
+if [[ ( `/usr/bin/uname -r | /usr/bin/cut -f 1 -d .` -gt 8 )  ]]; then
+if [[ ( ! -d /etc/paths.d ) ]]; then
+	mkdir /etc/paths.d
+fi
+fi
+
+if [[ ( `/usr/bin/uname -r | /usr/bin/cut -f 1 -d .` -gt 8 )  ]]; then
+if [[ ( ! -d /etc/manpaths.d ) ]]; then
+	mkdir /etc/manpaths.d
+fi
+fi
+
+
+if [[ ( `/usr/bin/uname -r | /usr/bin/cut -f 1 -d .` -gt 8 ) && (  -d /etc/paths.d ) ]]; then
+ 	cp -f -X ./TeXPath /etc/paths.d/TeX
+ 	chown root /etc/paths.d/TeX
+ 	chgrp wheel /etc/paths.d/TeX
+	chmod 644 /etc/paths.d/TeX 
+fi
+
+if [[ ( `/usr/bin/uname -r | /usr/bin/cut -f 1 -d .` -gt 8 ) && (  -d /etc/manpaths.d ) ]]; then
+ 	cp -f -X ./TeXManPath /etc/manpaths.d/TeX
+ 	chown root /etc/manpaths.d/TeX
+ 	chgrp wheel /etc/manpaths.d/TeX
+	chmod 644 /etc/manpaths.d/TeX
+fi
+
+
+# in Leopard, if /etc/profile or /etc/csh.login do NOT contain a call to path_helper, then use the old modifications
+# don't do this in Snow Leopard
+
+if [[ ( `/usr/bin/uname -r | /usr/bin/cut -f 1 -d .` -eq 9 ) ]]; then
+if [[ ( -e /etc/profile ) && ( $( grep -c '^[^#]*eval `/usr/libexec/path_helper -s`' /etc/profile ) = 0 ) ]]; then
+	./setloginpath $binpath TeX
+fi
+if [[ ( -e /etc/csh.login ) && ( $( grep -c '^[^#]*eval `/usr/libexec/path_helper -c`' /etc/csh.login ) = 0 ) ]]; then
+	./setloginpath $binpath TeX
+fi
+fi
+
+
+# Now install the TeX Dist Data Structure and links to it
+
+PROCESSOR=`/usr/bin/uname -p`
+SYSVERSION=`/usr/bin/uname -r | /usr/bin/cut -f 1 -d .`
+
+
+if [[ ! -d /Library/TeX ]]; then
+	mkdir /Library/TeX
+fi
+
+if [[ ( !  -L /Library/TeX/texbin ) && ( -d /Library/TeX/texbin ) && ( -e /Library/TeX/texbin/tex ) ]]; then
+	rm -R /Library/TeX/texbin
+fi
+
+if [[ -L /Library/TeX/texbin ]]; then
+	 rm /Library/TeX/texbin
+fi
+
+if [[ ( "$SYSVERSION" -lt 15 ) && ( !  -L /usr/texbin ) && ( -d /usr/texbin ) && ( -e /usr/texbin/tex ) ]]; then
+	rm -R /usr/texbin
+fi
+
+if [[ ( "$SYSVERSION" -lt 15 ) && ( -L usr/texbin ) ]]; then
+	 rm usr/texbin
+fi
+
+
+
+
+# NEW STUFF
+
+# In Mavericks and above, /Library/TeX/texbin points to /Library/TeX/Distributions/Programs/texbin
+# but that then points to the old location. Jerome understands why!
+
+# I got a new Pref Pane from Jerome just as everythihg else was done and I was on a trip to Seattle.
+# I wasn't happy, but I made the change. Since some users will have that version of the Pref Pane,
+# perhaps we need to keep this.
+
+if [[ `/usr/bin/uname -r | /usr/bin/cut -f 1 -d .` -lt 13 ]]; then
+	ln -fhs Distributions/.DefaultTeX/Contents/Programs/texbin /Library/TeX/texbin
+else
+	ln -fhs Distributions/Programs/texbin /Library/TeX/texbin
+fi
+
+if [[ `/usr/bin/uname -r | /usr/bin/cut -f 1 -d .` -lt 13 ]]; then
+	ln -fhs /Library/TeX/Distributions/.DefaultTeX/Contents/Programs/texbin /usr/texbin
+fi
+
+if [[ `/usr/bin/uname -r | /usr/bin/cut -f 1 -d .` == "13" ]]; then
+	ln -fhs /Library/TeX/Distributions/Programs/texbin /usr/texbin
+fi
+
+
+if [[ `/usr/bin/uname -r | /usr/bin/cut -f 1 -d .` == "14" ]]; then
+	ln -fhs /Library/TeX/Distributions/Programs/texbin /usr/texbin
+fi
+
+
+# END OF NEW STUFF
+	
+
+# create the texdist structure
+
+if [[ ! -d /Library/TeX ]]; then
+	mkdir /Library/TeX
+fi
+
+
+if [[ -L /Library/TeX/Documentation ]]; then
+	rm /Library/TeX/Documentation
+fi
+
+if [[ ! -e /Library/TeX/Documentation ]]; then
+	ln -s Distributions/.DefaultTeX/Contents/Doc /Library/TeX/Documentation 
+fi
+
+if [[ -L /Library/TeX/Root ]]; then
+	rm /Library/TeX/Root
+fi
+
+if [[ ! -e /Library/TeX/Root ]]; then
+	ln -s Distributions/.DefaultTeX/Contents/Root /Library/TeX/Root
+fi
+
+if [[ -L /Library/TeX/Local ]]; then
+	rm /Library/TeX/Local
+fi
+
+if [[ ! -e /Library/TeX/Local ]]; then
+	ln -s Distributions/.DefaultTeX/Contents/TexmfLocal /Library/TeX/Local
+fi
+
+if [[ ! -d /Library/TeX/Distributions ]]; then
+	mkdir /Library/TeX/Distributions
+fi
+
+# NEW STUFF
+
+if [[ ! -d /Library/TeX/Distributions/Programs ]]; then
+	mkdir /Library/TeX/Distributions/Programs
+	ln -s ../.DefaultTeX/Contents/Programs/texbin /Library/TeX/Distributions/Programs/texbin
+fi
+
+# END OF NEW STUFF
+
+
+if [[ ! -e /Library/TeX/Distributions/TeXDist-description.rtf ]]; then
+	cp ./TeXDist-description.rtf /Library/TeX/Distributions/TeXDist-description.rtf
+	chmod 644 /Library/TeX/Distributions/TeXDist-description.rtf
+fi
+
+ if [[  -L /usr/local/bin/texdist ]]; then
+ 	rm /usr/local/bin/texdist
+ fi
+
+ if [[ ! -d /usr/local/bin ]]; then
+	mkdir /usr/local/bin
+ fi
+
+ if [[ ! -e /usr/local/bin/texdist ]]; then
+ 	ln -s /Library/TeX/.scripts/texdist /usr/local/bin/texdist
+ fi
+ 
+
+
+if [[ ! -d /Library/TeX/Distributions/.DefaultTeX ]]; then
+	mkdir /Library/TeX/Distributions/.DefaultTeX
+fi 
+
+
+# /Library/TeX/Distributions/.DefaultTeX/Contents will become a link to the Contents
+# folder of the active distribution. Make TeXLive-2017 that active distribution
+# These are symbolic links, so the linked material will be created later on.
+
+if [[  -L /Library/TeX/Distributions/.DefaultTeX/Contents ]]; then
+	rm /Library/TeX/Distributions/.DefaultTeX/Contents
+fi
+
+if [[ !  -e /Library/TeX/Distributions/.DefaultTeX/Contents ]]; then
+	ln -s  ../TeXLive-2017.texdist/Contents /Library/TeX/Distributions/.DefaultTeX/Contents
+fi
+
+
+# Now we come to the key data defining the various TeX distributions which can occur.
+# It is legal to install this data even if the actual distribution isn't available, because the
+# Preference Pane checks to make sure the links point somewhere before using them.
+
+# MacTeX-2017 only installs data for 2017, and not for other years. 
+
+# The TeX Distribution data is much more elaborate than necessary because Jerome
+# Laurens and Gerben Wierda thought of other uses of the data, which front ends haven't
+# yet implemented.
+
+# For mysterious reasons, each actual distribution occurs twice. Take for example TeXLive-2017.
+# In /Library/TeX/Distributions, there is a folder named TeXLive-2017.texdist. But there is also
+# a hidden folder of distributions, /Library/TeX/Distributions/.FactoryDefaults, and this folder
+# contains a folder TeXLive-2017 as well. Notice that the first name has an extension and the
+# second does not.
+
+# The TeXLive-2017 folder in .FactoryDefaults contains a subfolder named Contents. The
+# TeXLive-2017.texdist folder in Distributions contains an item named Contents, but this
+# item is a symbolic link to the Contents folder in TeXLive-2017. Aside from this element,
+# TeXLive-2017.texdist is empty. All of the interesting links are in
+# .FactoryDefaults/TeXLive-2017/Contents
+
+# This strange design was required so icons could be assigned to the various distributions,
+# but that was never carried out. The extra complications now have no purpose, but they take
+# almost no disk space and the only people noticing them are people reading these comments!
+
+# All the items of interest are in /Library/TeX/Distributions/.FactoryDefaults/Contents
+# Many of these items are there for future use and aren't currently used by software. The key
+# subfolder of Contents for us is named Programs. It contains four links titled i386, ppc, powerpc,
+# and x86_64. Each is a link to the actual binary directory of the distribution of indicated type.
+# Some of these links might be missing for other distributions, but for TeXLive-2017, the
+# links i386, ppc, and powerpc all point to universal-darwin, and x86_64 points to x86_64-darwin.
+# Incidentally, ppc and powerpc will usually point to the same place; this link is duplicated for
+# historical reasons.
+
+# Programs also contains a symbolic link named texdist which points to one of the links
+# just described. The Preference Pane may reset this link. For instance, the drop down panel
+# allowing the user to choose 32 or 64 bit binaries resets the texdist link.
+
+# There is one other key item. Although Leopard can run 64 bit programs, the TeX Live 64 bit
+# programs are compiled on Snow Leopard and require that operating system. Jerome Laurens has
+# provided a mechanism for handling that situation. On Mac OS X, the Contents directory can contain
+# an Info.plist file. Jerome defined such a plist file which lives the minimal operating version which
+# can run particular binaries. This would allow us in the future to compile the 64 bit binaries on Lion
+# or another advanced system.
+
+# We first create .FactoryDefaults where the interesting data lives. We usually write data there
+# only if it doesn't already exist. But we will rewrite the data for our own distribution.
+
+if [[ ! -d /Library/TeX/Distributions/.FactoryDefaults ]]; then
+	mkdir /Library/TeX/Distributions/.FactoryDefaults
+fi
+
+if [[ -d /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017 ]]; then
+	rm -R /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017
+fi
+
+# Next we create links to the main data in .Factory Defaults
+
+if [[ ! -d /Library/TeX/Distributions/TeXLive-2017.texdist ]]; then
+	mkdir -p /Library/TeX/Distributions/TeXLive-2017.texdist
+	ln -s ../.FactoryDefaults/TeXLive-2017/Contents /Library/TeX/Distributions/TeXLive-2017.texdist/Contents
+fi
+
+
+# At last! Here's the data!
+
+if [[ ! -d /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017 ]]; then
+	mkdir -p  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/AllTexmf
+	mkdir -p /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Doc
+	mkdir -p /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Programs
+	mkdir -p /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Resources
+	mkdir -p /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Resources/English.lproj
+	cp ./TeXDistVersion  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/TeXDistVersion
+	chmod 644 /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/TeXDistVersion
+	cp ./Description.rtf  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Resources/English.lproj/Description.rtf
+	chmod 644  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Resources/English.lproj/Description.rtf
+	ln -s ../../../../../../usr/local/texlive/2017/texmf-dist/doc/info /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Info
+	ln -s ../../../../../../usr/local/texlive/2017/texmf-dist/doc/man /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Man
+	ln -s ../../../../../../usr/local/texlive/2017 /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Root
+	ln -s ../../../../../../usr/local/texlive/texmf-local /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/TexmfLocal
+	ln -s ../../../../../../usr/local/texlive/2017/texmf-var /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/TexmfSysVar
+	ln -s ../../../../../../../usr/local/texlive/2017/bin/i386-darwin /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Programs/i386
+	ln -s ../../../../../../../usr/local/texlive/2017/bin/powerpc-darwin /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Programs/powerpc
+	ln -s ../../../../../../../usr/local/texlive/2017/bin/powerpc-darwin /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Programs/ppc
+	ln -s ../../../../../../../usr/local/texlive/2017/bin/x86_64-darwinlegacy /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Programs/x86_64-legacy
+	ln -s ../../../../../../../usr/local/texlive/2017/bin/x86_64-darwin /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Programs/x86_64
+	ln -s ../../../../../../../usr/local/texlive/2017/texmf-dist/doc /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Doc/texmf-dist-doc
+	ln -s ../../../../../../../usr/local/texlive/2017/texmf-dist/doc /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Doc/texmf-doc
+	ln -s ../../../../../../../usr/local/texlive/2017/texmf-dist/doc /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Doc/texmf-doc-doc
+	ln -s ../../../../../../../usr/local/texlive/2017/texmf-dist/doc /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Doc/texmf-var-doc
+	ln -s ../../../../../../../usr/local/texlive/2017/texmf-dist /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/AllTexmf/texmf
+	ln -s ../../../../../../../usr/local/texlive/2017/texmf-dist /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/AllTexmf/texmf-dist
+	ln -s ../../../../../../../usr/local/texlive/2017/texmf-dist/doc /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/AllTexmf/texmf-doc
+	ln -s ../../../../../../../usr/local/texlive/2017/texmf-var /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/AllTexmf/texmf-var
+	ln -s ../../../../../../../usr/local/texlive/texmf-local /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/AllTexmf/texmf-local
+	if [[ "$PROCESSOR" == "powerpc" ]]; then
+		echo "### setting program link powerpc"
+		ln -s powerpc  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Programs/texbin
+	fi
+	if [[ "$PROCESSOR" == "i386" ]]; then
+		echo "### setting program link i386"
+		ln -s i386  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Programs/texbin
+	fi
+#	cp ./PrefPane/Info.plist /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Info.plist
+#	chmod 644 /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Info.plist
+fi
+
+
+
+# activate 64 bit data structure if machine is 64 bit capable and operating system is at least Snow Leopard
+
+# Snow Leopard test
+if [[ `/usr/bin/uname -r | /usr/bin/cut -f 1 -d .` -lt 10 ]]; then
+ 	exit 0 
+fi
+
+# 64 bit test
+if [[ `/usr/sbin/sysctl hw.cpu64bit_capable | /usr/bin/cut -b 22` -lt 1 ]]; then
+	exit 0
+fi
+
+# Activate 64 bits
+
+rm  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Programs/texbin
+
+if  [[ `/usr/bin/uname -r | /usr/bin/cut -f 1 -d .` -lt 16 ]]; then
+ln -s x86_64-legacy  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Programs/texbin
+	exit 0
+fi
+
+ln -s x86_64  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Programs/texbin
+
+exit 0
+
+
+

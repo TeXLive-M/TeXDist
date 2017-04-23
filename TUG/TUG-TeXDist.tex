@@ -1,0 +1,128 @@
+\documentclass[11pt, oneside]{amsart}
+\usepackage{geometry}                % See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   % ... or a4paper or a5paper or ... 
+%\geometry{landscape}                % Activate for for rotated page geometry
+\usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{epstopdf}
+\usepackage{url}
+\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+
+\title{TUG-TeXLive-2017}
+\author{Richard Koch}
+%\date{}                                           % Activate to display a given date or no date
+
+\begin{document}
+\maketitle
+\section{TeXLive-2017}
+This is the portion of the TUG documentation which deals with making the TeXDist package.
+This is used in the DVD version of the Installer.
+
+A clean package file will contain
+\begin{itemize}
+\item Files ``buildPackage.sh'' and ``signPackage.sh
+\item Files  ``background.jpg'', ``License.rtf'', ``ReadMe.rtf'', and ``Welcome.rtf''
+\item The main folder  has a scripts folder containing  files ``Description.rtf'', ``postinstall'', 
+ ``texdist'', ``TeXDist-description.rtf'', ``TeXDistVersion'', ``TeXManPath'', and ``TeXPath''. 
+\item Two project files for PackageMaker, TeXDistBuild, and ``TeXDistBuild copy''
+\item ``TUG'' folder with this document
+\end{itemize}
+
+\section{Updating for a New Year}
+
+To update the  package for a new year, edit ``buildPackage.sh'' to
+reflect the new package names, which contain the year.  
+
+Also edit the License.rtf, ReadMe.rtf, and Welcome.rtf files both at the root level of the folder and inside the DVD folder.
+ 
+Edit the two postflight scripts appropriately, mainly by changing the year.
+For instance, to change from 2016 to 2017, use Search and Replace to change the many,
+many occurrences of 2016 to 2017 in these files.
+
+\section{Creating the  Package}
+
+Issue the command
+
+\begin{verbatim}
+     sudo sh buildPackage.sh
+ \end{verbatim}
+to build the root folder, containing /Library/TeX.
+
+
+\section{Building TeXDist}
+
+This step is optional, since TeXDist will be part of MacTeX for the DVD.. There are two copies of the TeXDIstBuild template. The copy
+titled ``TeXDistBuild copy'' is there for backup in case the original template becomes corrupted, and the
+material below just provides additional backup.
+
+Edit TeXDistBuild, the Packagemaker project file, using the GUI interface, as follows.
+
+\begin{enumerate}
+\item Click the top item on the left. The right side will change to a view with three tabs. First select
+the Configuration tab. Edit so
+\begin{enumerate}
+\item Title: TeXDist
+\item User Sees: Easy Install Only
+\item Install Destination: System volume
+\item Certificate: Leave this blank. You might think that putting a certificate name here would correctly sign
+the package, but experiments show that it does not. The package needs to be signed after it is constructed.
+\item Description: Empty
+\end{enumerate}
+\item The Requirements and Actions tab entries for the top item can be left blank
+\item Click the entry TeXDist in the Contents section on the left. The right side will change to a view with two tabs.
+Select the Configuration tab. Edit so
+\begin{enumerate}
+\item Choice Name: TeXDist
+\item Identifier: choice1
+\item Initial State: Selected and Enabled
+\item Destiination: Leave Blank
+\item Tooltip: Leave Blank
+\item Description: Leave Blank
+\end{enumerate}
+\item The Requirements tab entries for this contents item can be left blank
+\item Open the TeXDiste  entry in the bottom left column. This item should show a ``Library'' directory,
+obtained by dragging root/Library to the left column. The right side will change to a view with four tabs.
+ It is not necessary to edit the
+items under the Contents or Components tabs. The items under the
+Configuration tab should be edited as follows:
+\begin{enumerate}
+\item Install: root/Library (The item on the right should have selected ``Relative To Project'')
+\item Destination: /Library (The item on the right should have selected ``Relative To Project'')
+\item Do not check ``Allow custom location''
+\item Patch: No patch root selected
+\item Package Identifier: org.tug.texdist2017
+\item Package Version: 1.0
+\item Restart Action: None
+\item Check ``Require admin authentication''
+\item PackageLocation: Self-Contained
+\end{enumerate}
+The items under the Scripts tab should be edited to read
+\begin{enumerate}
+\item Scripts directory: scripts (The item on the right should have selected ``Relative To Project'')
+\item Preinstall: Leave Blank
+\item Postinstall: scripts/postinstall (The item on the right should have selected ``Relative To Project'')
+\end{enumerate}
+
+\end{enumerate}
+
+
+
+\section{Signing}
+
+Sign the package using the single command
+\begin{verbatim}
+     sh signPackage.sh
+\end{verbatim}
+
+
+
+
+
+
+
+
+\end{document} 
+
+
+

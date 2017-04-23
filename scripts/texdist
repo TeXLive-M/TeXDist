@@ -1,0 +1,327 @@
+#!/usr/bin/perl
+
+my $arch = `uname -p`; chomp $arch;
+
+my @texdistlocations = ( "/Library/TeX/Distributions");
+my $defaultname = '.DefaultTeX';
+my $texdistversion = '1.5';
+
+use Getopt::Long;
+my $verbose = 0;
+my $list = 0;
+my $all = 0;
+my $usage = 0;
+my $dir = 0;
+my $version = 0;
+my $unique = 0;
+my $current = 0;
+my $setcurrent = '';
+my $showpath = '';
+my $expand = 0;
+my $texdist = "$defaultname";
+my $basepath = "/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin";
+$result = GetOptions( "verbose+" => \$verbose,
+		      "list" => \$list,
+		      "usage" => \$usage,
+		      "all" => \$all,
+		      "version" => \$version,
+		      "dir" => \$dir,
+		      "unique" => \$unique,
+		      "current" => \$current,
+		      "setcurrent=s" => \$setcurrent,
+		      "showpath" => \$showpath,
+		      "basepath=s" => \$basepath,
+		      "texdist=s" => \$texdist,
+		      "expand" => \$expand);
+
+my %alldist = locate_alldist();
+my %unique;
+
+if ($version) {
+    print "${texdistversion}\n";
+    exit 0;
+}
+
+if ($usage) {
+print <<__EOF_USAGE
+This is TeXDist, (C) Gerben Wierda, 2006
+TeXDist is an interface to multiple TeX distributions on your system, using
+the TeXDist description structure.
+TeXDist is free software under the BSD License (see below)
+
+Usage:
+    texdist [--verbose+] [--usage] [--version] [--list] [--all] [--dir]
+	[--unique] [--current] [--expand] [--texdist=s] [--basepath=s]
+	[--showpath] [--setcurrent=s] [command]
+
+    --verbose increases the verbosity of the program. Multiple --verbose flags
+	increase the verbosity even more.
+
+There is one help mode:
+    --usage gives this message and exits
+
+There is one identification mode:
+    --version gives the texdist version nuber and exits
+
+There are two listing modes:
+    --list lists all available TeX Dstributions on your system and exits
+    --current only shows the current distribution and exits. If the current
+	TeX Distribution is not usable (no binaries that are usable on your
+	system), this command displays nothing.
+
+The listing modes can be modified:
+    --all modifies --list to display all known distributions instead
+    --dir modifies --list and --current to show not only names of the TeX
+	Distributions but also where the TeX Distribution descriptions are kept.
+    --expand modifies --list and --current to show not the TeX Distribution
+	description but the root directory of that TeX Distribution.	
+    --unique modifies --list to show any unique output only once. There may be
+	multiple TeX Distribution descriptions on your system that point to
+	the same actual distribution
+
+There is one mode for setting the system default TeX:
+    --setcurrent=s looks in /Library/TeX/Distributions for s.texdist and then
+	sets the current system-wide TeX Distribution to s. It will only do this
+	when it is running with administrator privileges and of course if
+	s.texdist exists. The default is set in
+	/Library/TeX/Distributions/.DefaultTeX
+	After setting the default, the command exits.
+
+Then there is the command mode:
+    If neither --usage, --list or --current is given, TeXDist executes command
+    after having adapted the PATH to reflect the location of the TeX
+    Distribution to use. The default TeX Distribution used is .DefaultTex.
+    The standard PATH to which the TeX binaries directory is appended is
+    /bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
+
+The command mode can be modified:
+    --texdist=s changes the TeX Distribution to use to the string s before
+	executing command
+    --basepath=s changes the standard PATH to which the TeX binaries drectory
+	is appended to s before executing command
+    --showpath changes command mode such that the PATH for the command is
+	displayed but the command is not executed.
+
+Examples:
+    \$ texdist --list --all
+
+    TeXLive-2004.texdist
+    TeXLive-2005.texdist
+    TeXLive-2006.texdist
+    gwTeX-2003-2005.texdist
+    gwTeX.texdist
+
+    \$ texdist --list
+
+    TeXLive-2005.texdist
+    gwTeX-2003-2005.texdist
+    gwTeX.texdist
+
+    \$ texdist --list --dir
+
+    /Library/TeX/Distributions/TeXLive-2005.texdist
+    /Library/TeX/Distributions/gwTeX-2003-2005.texdist
+    /Library/TeX/Distributions/gwTeX.texdist
+
+    \$ texdist --list --expand
+
+    /usr/local/texlive/2005
+    /usr/local/teTeX
+    /usr/local/gwTeX
+
+    \$ texdist --current
+
+    gwTeX
+
+    \$ texdist --current -dir
+
+    /Library/TeX/Distributions/gwTeX.texdist
+
+    \$ texdist --current --expand
+
+    /usr/local/gwTeX
+
+    \$ texdist --verbose "kpsewhich fmtutil.cnf"
+
+    /usr/local/gwTeX/texmf/web2c/fmtutil.cnf
+
+    \$ texdist --verbose --texdist=TeXLive-2005 "kpsewhich fmtutil.cnf"
+
+    /usr/local/texlive/2005/texmf/web2c/fmtutil.cnf
+
+    \$ texdist --setcurrent=gwTeX --verbose
+
+    \$ sudo ./texdist --setcurrent=gwTeX
+
+    Password:
+    Default TeX set to "gwTeX"
+
+    \$ sudo ./texdist --setcurrent=gwTeX --dir
+
+    Password:
+    Default TeX set to /Library/TeX/Distributions/gwTeX.texdist
+
+    \$ sudo ./texdist --setcurrent=gwTeX --expand
+
+    Password:
+    Default TeX set to /usr/local/gwTeX
+__EOF_USAGE
+    ;exit 0;
+}
+
+if ($setcurrent ne '') {
+    if ($> != 0) {
+	die "The --setcurrent option requires administrator privileges. Bailing out...\n";
+    }
+    for my $distdir (@texdistlocations) {
+	if (-e "${distdir}/${setcurrent}.texdist") {
+	    my $linkdistdir = $distdir;
+	    if (${distdir} eq '/Library/TeX/Distributions') {
+		$linkdistdir = '..';
+	    }
+	    system( "/bin/rm -f /Library/TeX/Distributions/.DefaultTeX/Contents");
+	    system( "/bin/ln -s \"${linkdistdir}/${setcurrent}.texdist/Contents\" /Library/TeX/Distributions/.DefaultTeX/Contents");
+	    my $rapport = "\"$setcurrent\"";
+	    $rapport = "$distdir/$setcurrent.texdist" if $dir;
+	    $rapport = expand( "$distdir/$setcurrent.texdist/Contents/Root") if $expand;
+	    print "Default TeX set to $rapport\n";
+	    exit 0;
+	}
+    }
+    die "$0: No TeX distributions \"$setcurrent\" found.\n";
+}
+
+if ($current) {
+    if ($alldist{"$defaultname"}{'usable'} eq 'no') {
+	warn "$0: No usable current TeX defined (no binaries in an architecture we can run)\n" if $verbose;
+    }
+    elsif ($alldist{"$defaultname"}{'usable'} eq 'rosetta') {
+	warn "$0: Your current default will be run via Rosetta emulation (slow)\n" if $verbose;
+    }
+    # First: try to find which .texdist is pointing to us. This is done by
+    # using readlink
+    my $defaultcontents = $alldist{"$defaultname"}{'location'} . '/Contents';
+    my $contentslink = readlink( $defaultcontents);
+    my $location = $alldist{"$defaultname"}{'location'};
+    $location =~ s/$/\/$contentslink/;
+    $location =~ s/\/Contents//;
+    $location =~ s/$defaultname\/\.\.\///;
+    my ($dirname,$distname) = $location =~ m|(.+)/([^/]+)\.texdist$|;
+
+    if (-e $alldist{"$defaultname"}{'root'}) {
+	my $rapport;
+	if ($expand) {
+	    $rapport = expand( $alldist{"$defaultname"}{'root'});
+	}
+	elsif ($dir) {
+	    $rapport = "$dirname/$distname.texdist";
+	}
+	else {
+	    $rapport = $distname;
+	}
+	print( "$rapport\n");
+    }
+    else {
+	warn "$0: No locatable current TeX defined\n" if $verbose;
+    }
+    exit 0;
+}
+
+if ($list) {
+    foreach my $dist (sort keys %alldist) {
+	next if $dist eq "$defaultname";
+	if ($all or $alldist{$dist}{'usable'} ne 'no') {
+	    my $rapport;
+	    if ($expand) {
+		if (not -e $alldist{$dist}{'root'}) {
+		    $rapport = "$alldist{$dist}{'root'} (unresolved)";
+		}
+		else {
+		    $rapport = expand( $alldist{$dist}{'root'});
+		}
+	    }
+	    elsif ($dir) {
+		$rapport = $alldist{$dist}{'location'};
+	    }
+	    else {
+		$rapport = $dist;
+	    }
+	    if (not $unique or not exists $unique{$rapport}) {
+		print( "$rapport\n");
+	    }
+	    $unique{$rapport} = 1;
+	}
+    }
+    exit 0;
+}
+
+warn "$0: Using TeX distribution ${texdist}\n" if ($verbose > 1);
+
+my $truepath = undef;
+if (not exists $alldist{$texdist}{'path'}) {
+    if (not exists $alldist{"$texdist.texdist"}{'path'}) {
+	die "Distribution $texdist does not poin to a usable binaries location.\n";
+    }
+    $truepath = $alldist{"$texdist.texdist"}{'path'};
+}
+else {
+    $truepath = $alldist{$texdist}{'path'};
+}
+
+warn "Adding $truepath to PATH\n" if $verbose > 3;
+$ENV{'PATH'} = "$basepath:$truepath";
+if ($showpath) {
+    print "Will execute \"$ARGV[0]\" with PATH=\"$basepath:$truepath\"\n";
+    exit 0;
+}
+else {
+    exit system( "$ARGV[0]");
+}
+
+sub locate_alldist
+{
+    my %resultdirs;
+
+    for my $dir (@texdistlocations) {
+	if (opendir( DIRHANDLE, $dir)) {
+	    while (my $potentialtexdir = readdir( DIRHANDLE)) {
+		warn "$0: Testing for TeX distribution \"$dir/$potentialtexdir\"\n" if ($verbose > 3);
+		if (-e "$dir/$potentialtexdir/Contents/TeXDistVersion") {
+		    warn "$0: Possible TeX distribution \"$dir/$potentialtexdir\" found.\n" if ($verbose > 2);
+		    $resultdirs{$potentialtexdir}{'location'} = "$dir/$potentialtexdir";
+		    $resultdirs{$potentialtexdir}{'shortname'} = "$potentialtexdir";
+		    if (-e "$dir/$potentialtexdir/Contents/Programs/$arch/tex") {
+			warn "$0: Usable TeX distribution \"$dir/$potentialtexdir\" found.\n" if ($verbose > 2);
+			$resultdirs{$potentialtexdir}{'usable'} = 'native';
+			$resultdirs{$potentialtexdir}{'path'} = "$dir/$potentialtexdir/Contents/Programs/$arch";
+			$resultdirs{$potentialtexdir}{'root'} = "$dir/$potentialtexdir/Contents/Root";
+		    }
+		    elsif ($arch eq 'i386' and
+			   -e "$dir/$potentialtexdir/Contents/Programs/powerpc/tex") {
+			warn "$0: Usable (Rosetta) TeX distribution \"$dir/$potentialtexdir\" found.\n" if ($verbose > 1);
+			$resultdirs{$potentialtexdir}{'usable'} = 'rosetta';
+			$resultdirs{$potentialtexdir}{'path'} = "$dir/$potentialtexdir/Contents/Programs/powerpc";
+			$resultdirs{$potentialtexdir}{'root'} = "$dir/$potentialtexdir/Contents/Root";
+		    }
+		    else {
+			warn "$0: Unavailable TeX distribution \"$dir/$potentialtexdir\" found.\n" if ($verbose > 1);
+			$resultdirs{$potentialtexdir}{'usable'} = 'no';
+			$resultdirs{$potentialtexdir}{'root'} = "$dir/$potentialtexdir/Contents/Root";
+			$resultdirs{$potentialtexdir}{'path'} = undef;
+		    }
+		}
+	    }
+	    closedir( DIRHANDLE);
+	}
+    }
+    return %resultdirs;
+}
+
+sub expand
+{
+    my $try = shift;
+    my $tryparent = $try; $tryparent =~ s|/[^/]+$||;
+    my $result = `{ cd \"$try\" || cd \"$tryparent\" ; } >/dev/null 2>&1 && /bin/pwd -P`;
+    chomp $result;
+    return $result;
+}
