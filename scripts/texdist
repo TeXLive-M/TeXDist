@@ -74,7 +74,7 @@ The listing modes can be modified:
     --dir modifies --list and --current to show not only names of the TeX
 	Distributions but also where the TeX Distribution descriptions are kept.
     --expand modifies --list and --current to show not the TeX Distribution
-	description but the root directory of that TeX Distribution.	
+	description but the root directory of that TeX Distribution.
     --unique modifies --list to show any unique output only once. There may be
 	multiple TeX Distribution descriptions on your system that point to
 	the same actual distribution

@@ -34,7 +34,7 @@ if [[ ( `/usr/bin/uname -r | /usr/bin/cut -f 1 -d .` -gt 8 ) && (  -d /etc/paths
  	cp -f -X ./TeXPath /etc/paths.d/TeX
  	chown root /etc/paths.d/TeX
  	chgrp wheel /etc/paths.d/TeX
-	chmod 644 /etc/paths.d/TeX 
+	chmod 644 /etc/paths.d/TeX
 fi
 
 if [[ ( `/usr/bin/uname -r | /usr/bin/cut -f 1 -d .` -gt 8 ) && (  -d /etc/manpaths.d ) ]]; then
@@ -117,7 +117,7 @@ fi
 
 
 # END OF NEW STUFF
-	
+
 
 # create the texdist structure
 
@@ -131,7 +131,7 @@ if [[ -L /Library/TeX/Documentation ]]; then
 fi
 
 if [[ ! -e /Library/TeX/Documentation ]]; then
-	ln -s Distributions/.DefaultTeX/Contents/Doc /Library/TeX/Documentation 
+	ln -s Distributions/.DefaultTeX/Contents/Doc /Library/TeX/Documentation
 fi
 
 if [[ -L /Library/TeX/Root ]]; then
@@ -180,12 +180,12 @@ fi
  if [[ ! -e /usr/local/bin/texdist ]]; then
  	ln -s /Library/TeX/.scripts/texdist /usr/local/bin/texdist
  fi
- 
+
 
 
 if [[ ! -d /Library/TeX/Distributions/.DefaultTeX ]]; then
 	mkdir /Library/TeX/Distributions/.DefaultTeX
-fi 
+fi
 
 
 # /Library/TeX/Distributions/.DefaultTeX/Contents will become a link to the Contents
@@ -205,7 +205,7 @@ fi
 # It is legal to install this data even if the actual distribution isn't available, because the
 # Preference Pane checks to make sure the links point somewhere before using them.
 
-# MacTeX-2017 only installs data for 2017, and not for other years. 
+# MacTeX-2017 only installs data for 2017, and not for other years.
 
 # The TeX Distribution data is much more elaborate than necessary because Jerome
 # Laurens and Gerben Wierda thought of other uses of the data, which front ends haven't
@@ -315,7 +315,7 @@ fi
 
 # Snow Leopard test
 if [[ `/usr/bin/uname -r | /usr/bin/cut -f 1 -d .` -lt 10 ]]; then
- 	exit 0 
+	exit 0
 fi
 
 # 64 bit test
@@ -335,6 +335,3 @@ fi
 ln -s x86_64  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Programs/texbin
 
 exit 0
-
-
-
