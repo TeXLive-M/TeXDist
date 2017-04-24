@@ -6,7 +6,7 @@
         <description/>
         <post-install type="none"/>
         <requireAuthorization/>
-        <installFrom relative="true">root/Library</installFrom>
+        <installFrom relative="true">build/Library</installFrom>
         <installTo mod="true">/Library</installTo>
         <flags>
             <followSymbolicLinks/>

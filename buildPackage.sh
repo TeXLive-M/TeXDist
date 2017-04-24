@@ -1,24 +1,19 @@
 #!/bin/bash
 
-
 # We're going to run this in the MacTeXDVD working directory...
-WORK=`pwd`
+WORKPATH=$(cd -P -- "$(dirname -- "$SCRIPTPATH")" && pwd -P)
 
+BUILDPATH="${WORKPATH}/build"
+LIBRARYPATH="${BUILDPATH}/Library/TeX"
 
-echo "Removing old file tree at ${WORK}/root"
-rm -rf ${WORK}/root
+echo "Removing old file tree at ${BUILDPATH}"
+rm -rf "${BUILDPATH}"
 
 # Copy files to root
-mkdir -p ${WORK}/root/Library/TeX/.scripts
-cp ${WORK}/texdist ${WORK}/root/Library/TeX/.scripts/texdist
-cp ${WORK}/"Choosing a TeX Distribution.rtf" ${WORK}/root/Library/TeX
+mkdir -p "${LIBRARYPATH}/.scripts" || exit 1
+rsync -a "${WORKPATH}/scripts/texdist" "${LIBRARYPATH}/.scripts/"
+rsync -a "${WORKPATH}/media/Choosing a TeX Distribution.rtf" "${LIBRARYPATH}"
 
-
-chmod -R 755 ${WORK}/root
-chgrp -R wheel ${WORK}/root
-chown -R root ${WORK}/root
-
-
-
-
-
+chmod -R 755 "${BUILDPATH}"
+chgrp -R wheel "${BUILDPATH}"
+chown -R root "${BUILDPATH}"

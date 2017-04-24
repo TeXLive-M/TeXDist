@@ -19,10 +19,10 @@
     </contents>
     <resources bg-scale="none" bg-align="topleft">
         <locale lang="en">
-            <resource relative="true" mod="true" type="background">background.jpg</resource>
-            <resource relative="true" mod="true" type="license">License.rtf</resource>
-            <resource relative="true" mod="true" type="readme">ReadMe.rtf</resource>
-            <resource relative="true" mod="true" type="welcome">Welcome.rtf</resource>
+            <resource relative="true" mod="true" type="background">media/installer/background.jpg</resource>
+            <resource relative="true" mod="true" type="license">media/installer/License.rtf</resource>
+            <resource relative="true" mod="true" type="readme">media/installer/ReadMe.rtf</resource>
+            <resource relative="true" mod="true" type="welcome">media/installer/Welcome.rtf</resource>
         </locale>
     </resources>
     <flags/>
