@@ -1,1 +1,11 @@
-<pkg-contents spec="1.12"><f n="Library" o="root" g="wheel" p="16877" pt="root/Library" m="false" t="file"><f n="TeX" o="root" g="wheel" p="16877"><f n=".scripts" o="root" g="wheel" p="16877"><f n="texdist" o="root" g="wheel" p="33261"/></f><f n="Choosing a TeX Distribution.rtf" o="root" g="wheel" p="33188"/></f></f></pkg-contents>
+<?xml version="1.0"?>
+<pkg-contents spec="1.12">
+    <f n="Library" o="root" g="wheel" p="16877" pt="root/Library" m="false" t="file">
+        <f n="TeX" o="root" g="wheel" p="16877">
+            <f n=".scripts" o="root" g="wheel" p="16877">
+                <f n="texdist" o="root" g="wheel" p="33261"/>
+            </f>
+            <f n="Choosing a TeX Distribution.rtf" o="root" g="wheel" p="33188"/>
+        </f>
+    </f>
+</pkg-contents>
