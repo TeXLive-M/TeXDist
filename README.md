@@ -2,6 +2,8 @@
 
 TeXDist installer for legacy Macs
 
+<img src="media/installer/background.jpg" align="center" width="310">
+
 This documentation explains how the TeXDist package is made.
 
 ## Contents
