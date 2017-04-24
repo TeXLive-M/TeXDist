@@ -3,7 +3,7 @@
 # postflight script for the MacTeX installer
 
 PKG_PATH=$1
-
+YEAR=2017
 
 # Adjust PATH and MANPATH
 
@@ -189,7 +189,7 @@ fi
 
 
 # /Library/TeX/Distributions/.DefaultTeX/Contents will become a link to the Contents
-# folder of the active distribution. Make TeXLive-2017 that active distribution
+# folder of the active distribution. Make TeXLive-YYYY that active distribution
 # These are symbolic links, so the linked material will be created later on.
 
 if [[  -L /Library/TeX/Distributions/.DefaultTeX/Contents ]]; then
@@ -197,7 +197,7 @@ if [[  -L /Library/TeX/Distributions/.DefaultTeX/Contents ]]; then
 fi
 
 if [[ !  -e /Library/TeX/Distributions/.DefaultTeX/Contents ]]; then
-	ln -s  ../TeXLive-2017.texdist/Contents /Library/TeX/Distributions/.DefaultTeX/Contents
+	ln -s  ../TeXLive-${YEAR}.texdist/Contents /Library/TeX/Distributions/.DefaultTeX/Contents
 fi
 
 
@@ -205,23 +205,23 @@ fi
 # It is legal to install this data even if the actual distribution isn't available, because the
 # Preference Pane checks to make sure the links point somewhere before using them.
 
-# MacTeX-2017 only installs data for 2017, and not for other years.
+# MacTeX-YYYY only installs data for YYYY, and not for other years.
 
 # The TeX Distribution data is much more elaborate than necessary because Jerome
 # Laurens and Gerben Wierda thought of other uses of the data, which front ends haven't
 # yet implemented.
 
-# For mysterious reasons, each actual distribution occurs twice. Take for example TeXLive-2017.
-# In /Library/TeX/Distributions, there is a folder named TeXLive-2017.texdist. But there is also
+# For mysterious reasons, each actual distribution occurs twice. Take for example TeXLive-YYYY.
+# In /Library/TeX/Distributions, there is a folder named TeXLive-YYYY.texdist. But there is also
 # a hidden folder of distributions, /Library/TeX/Distributions/.FactoryDefaults, and this folder
-# contains a folder TeXLive-2017 as well. Notice that the first name has an extension and the
+# contains a folder TeXLive-YYYY as well. Notice that the first name has an extension and the
 # second does not.
 
-# The TeXLive-2017 folder in .FactoryDefaults contains a subfolder named Contents. The
-# TeXLive-2017.texdist folder in Distributions contains an item named Contents, but this
-# item is a symbolic link to the Contents folder in TeXLive-2017. Aside from this element,
-# TeXLive-2017.texdist is empty. All of the interesting links are in
-# .FactoryDefaults/TeXLive-2017/Contents
+# The TeXLive-YYYY folder in .FactoryDefaults contains a subfolder named Contents. The
+# TeXLive-YYYY.texdist folder in Distributions contains an item named Contents, but this
+# item is a symbolic link to the Contents folder in TeXLive-YYYY. Aside from this element,
+# TeXLive-YYYY.texdist is empty. All of the interesting links are in
+# .FactoryDefaults/TeXLive-YYYY/Contents
 
 # This strange design was required so icons could be assigned to the various distributions,
 # but that was never carried out. The extra complications now have no purpose, but they take
@@ -231,7 +231,7 @@ fi
 # Many of these items are there for future use and aren't currently used by software. The key
 # subfolder of Contents for us is named Programs. It contains four links titled i386, ppc, powerpc,
 # and x86_64. Each is a link to the actual binary directory of the distribution of indicated type.
-# Some of these links might be missing for other distributions, but for TeXLive-2017, the
+# Some of these links might be missing for other distributions, but for TeXLive-YYYY, the
 # links i386, ppc, and powerpc all point to universal-darwin, and x86_64 points to x86_64-darwin.
 # Incidentally, ppc and powerpc will usually point to the same place; this link is duplicated for
 # historical reasons.
@@ -254,59 +254,59 @@ if [[ ! -d /Library/TeX/Distributions/.FactoryDefaults ]]; then
 	mkdir /Library/TeX/Distributions/.FactoryDefaults
 fi
 
-if [[ -d /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017 ]]; then
-	rm -R /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017
+if [[ -d /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR} ]]; then
+	rm -R /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}
 fi
 
 # Next we create links to the main data in .Factory Defaults
 
-if [[ ! -d /Library/TeX/Distributions/TeXLive-2017.texdist ]]; then
-	mkdir -p /Library/TeX/Distributions/TeXLive-2017.texdist
-	ln -s ../.FactoryDefaults/TeXLive-2017/Contents /Library/TeX/Distributions/TeXLive-2017.texdist/Contents
+if [[ ! -d /Library/TeX/Distributions/TeXLive-${YEAR}.texdist ]]; then
+	mkdir -p /Library/TeX/Distributions/TeXLive-${YEAR}.texdist
+	ln -s ../.FactoryDefaults/TeXLive-${YEAR}/Contents /Library/TeX/Distributions/TeXLive-${YEAR}.texdist/Contents
 fi
 
 
 # At last! Here's the data!
 
-if [[ ! -d /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017 ]]; then
-	mkdir -p  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/AllTexmf
-	mkdir -p /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Doc
-	mkdir -p /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Programs
-	mkdir -p /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Resources
-	mkdir -p /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Resources/English.lproj
-	cp ./TeXDistVersion  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/TeXDistVersion
-	chmod 644 /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/TeXDistVersion
-	cp ./Description.rtf  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Resources/English.lproj/Description.rtf
-	chmod 644  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Resources/English.lproj/Description.rtf
-	ln -s ../../../../../../usr/local/texlive/2017/texmf-dist/doc/info /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Info
-	ln -s ../../../../../../usr/local/texlive/2017/texmf-dist/doc/man /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Man
-	ln -s ../../../../../../usr/local/texlive/2017 /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Root
-	ln -s ../../../../../../usr/local/texlive/texmf-local /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/TexmfLocal
-	ln -s ../../../../../../usr/local/texlive/2017/texmf-var /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/TexmfSysVar
-	ln -s ../../../../../../../usr/local/texlive/2017/bin/i386-darwin /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Programs/i386
-	ln -s ../../../../../../../usr/local/texlive/2017/bin/powerpc-darwin /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Programs/powerpc
-	ln -s ../../../../../../../usr/local/texlive/2017/bin/powerpc-darwin /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Programs/ppc
-	ln -s ../../../../../../../usr/local/texlive/2017/bin/x86_64-darwinlegacy /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Programs/x86_64-legacy
-	ln -s ../../../../../../../usr/local/texlive/2017/bin/x86_64-darwin /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Programs/x86_64
-	ln -s ../../../../../../../usr/local/texlive/2017/texmf-dist/doc /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Doc/texmf-dist-doc
-	ln -s ../../../../../../../usr/local/texlive/2017/texmf-dist/doc /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Doc/texmf-doc
-	ln -s ../../../../../../../usr/local/texlive/2017/texmf-dist/doc /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Doc/texmf-doc-doc
-	ln -s ../../../../../../../usr/local/texlive/2017/texmf-dist/doc /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Doc/texmf-var-doc
-	ln -s ../../../../../../../usr/local/texlive/2017/texmf-dist /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/AllTexmf/texmf
-	ln -s ../../../../../../../usr/local/texlive/2017/texmf-dist /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/AllTexmf/texmf-dist
-	ln -s ../../../../../../../usr/local/texlive/2017/texmf-dist/doc /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/AllTexmf/texmf-doc
-	ln -s ../../../../../../../usr/local/texlive/2017/texmf-var /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/AllTexmf/texmf-var
-	ln -s ../../../../../../../usr/local/texlive/texmf-local /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/AllTexmf/texmf-local
+if [[ ! -d /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR} ]]; then
+	mkdir -p  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/AllTexmf
+	mkdir -p /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Doc
+	mkdir -p /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Programs
+	mkdir -p /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Resources
+	mkdir -p /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Resources/English.lproj
+	cp ./TeXDistVersion  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/TeXDistVersion
+	chmod 644 /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/TeXDistVersion
+	cp ./Description.rtf  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Resources/English.lproj/Description.rtf
+	chmod 644  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Resources/English.lproj/Description.rtf
+	ln -s ../../../../../../usr/local/texlive/${YEAR}/texmf-dist/doc/info /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Info
+	ln -s ../../../../../../usr/local/texlive/${YEAR}/texmf-dist/doc/man /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Man
+	ln -s ../../../../../../usr/local/texlive/${YEAR} /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Root
+	ln -s ../../../../../../usr/local/texlive/texmf-local /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/TexmfLocal
+	ln -s ../../../../../../usr/local/texlive/${YEAR}/texmf-var /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/TexmfSysVar
+	ln -s ../../../../../../../usr/local/texlive/${YEAR}/bin/i386-darwin /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Programs/i386
+	ln -s ../../../../../../../usr/local/texlive/${YEAR}/bin/powerpc-darwin /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Programs/powerpc
+	ln -s ../../../../../../../usr/local/texlive/${YEAR}/bin/powerpc-darwin /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Programs/ppc
+	ln -s ../../../../../../../usr/local/texlive/${YEAR}/bin/x86_64-darwinlegacy /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Programs/x86_64-legacy
+	ln -s ../../../../../../../usr/local/texlive/${YEAR}/bin/x86_64-darwin /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Programs/x86_64
+	ln -s ../../../../../../../usr/local/texlive/${YEAR}/texmf-dist/doc /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Doc/texmf-dist-doc
+	ln -s ../../../../../../../usr/local/texlive/${YEAR}/texmf-dist/doc /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Doc/texmf-doc
+	ln -s ../../../../../../../usr/local/texlive/${YEAR}/texmf-dist/doc /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Doc/texmf-doc-doc
+	ln -s ../../../../../../../usr/local/texlive/${YEAR}/texmf-dist/doc /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Doc/texmf-var-doc
+	ln -s ../../../../../../../usr/local/texlive/${YEAR}/texmf-dist /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/AllTexmf/texmf
+	ln -s ../../../../../../../usr/local/texlive/${YEAR}/texmf-dist /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/AllTexmf/texmf-dist
+	ln -s ../../../../../../../usr/local/texlive/${YEAR}/texmf-dist/doc /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/AllTexmf/texmf-doc
+	ln -s ../../../../../../../usr/local/texlive/${YEAR}/texmf-var /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/AllTexmf/texmf-var
+	ln -s ../../../../../../../usr/local/texlive/texmf-local /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/AllTexmf/texmf-local
 	if [[ "$PROCESSOR" == "powerpc" ]]; then
 		echo "### setting program link powerpc"
-		ln -s powerpc  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Programs/texbin
+		ln -s powerpc  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Programs/texbin
 	fi
 	if [[ "$PROCESSOR" == "i386" ]]; then
 		echo "### setting program link i386"
-		ln -s i386  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Programs/texbin
+		ln -s i386  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Programs/texbin
 	fi
-#	cp ./PrefPane/Info.plist /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Info.plist
-#	chmod 644 /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Info.plist
+#	cp ./PrefPane/Info.plist /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Info.plist
+#	chmod 644 /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Info.plist
 fi
 
 
@@ -325,13 +325,13 @@ fi
 
 # Activate 64 bits
 
-rm  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Programs/texbin
+rm  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Programs/texbin
 
 if  [[ `/usr/bin/uname -r | /usr/bin/cut -f 1 -d .` -lt 16 ]]; then
-ln -s x86_64-legacy  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Programs/texbin
+ln -s x86_64-legacy  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Programs/texbin
 	exit 0
 fi
 
-ln -s x86_64  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-2017/Contents/Programs/texbin
+ln -s x86_64  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Programs/texbin
 
 exit 0
