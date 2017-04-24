@@ -5,6 +5,23 @@
 PKG_PATH=$1
 YEAR=2017
 
+SYSVERSION=`/usr/bin/uname -r | /usr/bin/cut -f 1 -d .`
+LEGACY_SYSVERSION=13
+PROCESSOR=`/usr/bin/uname -m`
+PROCESSOR_LINK="$PROCESSOR"
+PLATFORM="${PROCESSOR}-darwin"
+
+# 10.6 and later
+if [[ "$SYSVERSION" -ge 10 ]]; then
+	# 10.6 - 10.9, x86_64
+	if [[ "$SYSVERSION" -le "$LEGACY_SYSVERSION" ]] && [[ `sysctl -n hw.cpu64bit_capable` -eq 1 ]]; then
+		PROCESSOR="x86_64"
+		PROCESSOR_LINK="${PROCESSOR}-legacy"
+		PLATFORM="${PROCESSOR}-darwinlegacy"
+	fi
+fi
+
+
 # Adjust PATH and MANPATH
 
 # Much of this code was copied from Gerben Wierda long ago.
@@ -15,40 +32,27 @@ YEAR=2017
 manpath="/Library/TeX/Distributions/.DefaultTeX/Contents/Man"
 binpath="/usr/texbin"
 
-# in Leopard, add elements to path and manpath
+# add elements to path and manpath
 
-if [[ ( `/usr/bin/uname -r | /usr/bin/cut -f 1 -d .` -gt 8 )  ]]; then
 if [[ ( ! -d /etc/paths.d ) ]]; then
 	mkdir /etc/paths.d
 fi
-fi
+cp -f -X ./TeXPath /etc/paths.d/TeX
+chown root:wheel /etc/paths.d/TeX
+chmod 644 /etc/paths.d/TeX
 
-if [[ ( `/usr/bin/uname -r | /usr/bin/cut -f 1 -d .` -gt 8 )  ]]; then
 if [[ ( ! -d /etc/manpaths.d ) ]]; then
 	mkdir /etc/manpaths.d
 fi
-fi
-
-
-if [[ ( `/usr/bin/uname -r | /usr/bin/cut -f 1 -d .` -gt 8 ) && (  -d /etc/paths.d ) ]]; then
- 	cp -f -X ./TeXPath /etc/paths.d/TeX
- 	chown root /etc/paths.d/TeX
- 	chgrp wheel /etc/paths.d/TeX
-	chmod 644 /etc/paths.d/TeX
-fi
-
-if [[ ( `/usr/bin/uname -r | /usr/bin/cut -f 1 -d .` -gt 8 ) && (  -d /etc/manpaths.d ) ]]; then
- 	cp -f -X ./TeXManPath /etc/manpaths.d/TeX
- 	chown root /etc/manpaths.d/TeX
- 	chgrp wheel /etc/manpaths.d/TeX
-	chmod 644 /etc/manpaths.d/TeX
-fi
+cp -f -X ./TeXManPath /etc/manpaths.d/TeX
+chown root:wheel /etc/manpaths.d/TeX
+chmod 644 /etc/manpaths.d/TeX
 
 
 # in Leopard, if /etc/profile or /etc/csh.login do NOT contain a call to path_helper, then use the old modifications
 # don't do this in Snow Leopard
 
-if [[ ( `/usr/bin/uname -r | /usr/bin/cut -f 1 -d .` -eq 9 ) ]]; then
+if [[ ( "$SYSVERSION" -eq 9 ) ]]; then
 if [[ ( -e /etc/profile ) && ( $( grep -c '^[^#]*eval `/usr/libexec/path_helper -s`' /etc/profile ) = 0 ) ]]; then
 	./setloginpath $binpath TeX
 fi
@@ -60,10 +64,6 @@ fi
 
 # Now install the TeX Dist Data Structure and links to it
 
-PROCESSOR=`/usr/bin/uname -p`
-SYSVERSION=`/usr/bin/uname -r | /usr/bin/cut -f 1 -d .`
-
-
 if [[ ! -d /Library/TeX ]]; then
 	mkdir /Library/TeX
 fi
@@ -73,7 +73,7 @@ if [[ ( !  -L /Library/TeX/texbin ) && ( -d /Library/TeX/texbin ) && ( -e /Libra
 fi
 
 if [[ -L /Library/TeX/texbin ]]; then
-	 rm /Library/TeX/texbin
+	rm /Library/TeX/texbin
 fi
 
 if [[ ( "$SYSVERSION" -lt 15 ) && ( !  -L /usr/texbin ) && ( -d /usr/texbin ) && ( -e /usr/texbin/tex ) ]]; then
@@ -81,10 +81,8 @@ if [[ ( "$SYSVERSION" -lt 15 ) && ( !  -L /usr/texbin ) && ( -d /usr/texbin ) &&
 fi
 
 if [[ ( "$SYSVERSION" -lt 15 ) && ( -L usr/texbin ) ]]; then
-	 rm usr/texbin
+	rm usr/texbin
 fi
-
-
 
 
 # NEW STUFF
@@ -96,25 +94,18 @@ fi
 # I wasn't happy, but I made the change. Since some users will have that version of the Pref Pane,
 # perhaps we need to keep this.
 
-if [[ `/usr/bin/uname -r | /usr/bin/cut -f 1 -d .` -lt 13 ]]; then
+# up to 10.8
+if [[ "$SYSVERSION" -lt 13 ]]; then
 	ln -fhs Distributions/.DefaultTeX/Contents/Programs/texbin /Library/TeX/texbin
-else
-	ln -fhs Distributions/Programs/texbin /Library/TeX/texbin
-fi
-
-if [[ `/usr/bin/uname -r | /usr/bin/cut -f 1 -d .` -lt 13 ]]; then
 	ln -fhs /Library/TeX/Distributions/.DefaultTeX/Contents/Programs/texbin /usr/texbin
+else
+	# 10.9 and later
+	ln -fhs Distributions/Programs/texbin /Library/TeX/texbin
+	# 10.9 and 10.10
+	if [[ "$SYSVERSION" -lt 15 ]]; then
+		ln -fhs /Library/TeX/Distributions/Programs/texbin /usr/texbin
+	fi
 fi
-
-if [[ `/usr/bin/uname -r | /usr/bin/cut -f 1 -d .` == "13" ]]; then
-	ln -fhs /Library/TeX/Distributions/Programs/texbin /usr/texbin
-fi
-
-
-if [[ `/usr/bin/uname -r | /usr/bin/cut -f 1 -d .` == "14" ]]; then
-	ln -fhs /Library/TeX/Distributions/Programs/texbin /usr/texbin
-fi
-
 
 # END OF NEW STUFF
 
@@ -169,17 +160,17 @@ if [[ ! -e /Library/TeX/Distributions/TeXDist-description.rtf ]]; then
 	chmod 644 /Library/TeX/Distributions/TeXDist-description.rtf
 fi
 
- if [[  -L /usr/local/bin/texdist ]]; then
- 	rm /usr/local/bin/texdist
- fi
+if [[  -L /usr/local/bin/texdist ]]; then
+	rm /usr/local/bin/texdist
+fi
 
- if [[ ! -d /usr/local/bin ]]; then
+if [[ ! -d /usr/local/bin ]]; then
 	mkdir /usr/local/bin
- fi
+fi
 
- if [[ ! -e /usr/local/bin/texdist ]]; then
- 	ln -s /Library/TeX/.scripts/texdist /usr/local/bin/texdist
- fi
+if [[ ! -e /usr/local/bin/texdist ]]; then
+	ln -s /Library/TeX/.scripts/texdist /usr/local/bin/texdist
+fi
 
 
 
@@ -268,70 +259,51 @@ fi
 
 # At last! Here's the data!
 
-if [[ ! -d /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR} ]]; then
-	mkdir -p  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/AllTexmf
-	mkdir -p /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Doc
-	mkdir -p /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Programs
-	mkdir -p /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Resources
-	mkdir -p /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Resources/English.lproj
-	cp ./TeXDistVersion  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/TeXDistVersion
-	chmod 644 /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/TeXDistVersion
-	cp ./Description.rtf  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Resources/English.lproj/Description.rtf
-	chmod 644  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Resources/English.lproj/Description.rtf
-	ln -s ../../../../../../usr/local/texlive/${YEAR}/texmf-dist/doc/info /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Info
-	ln -s ../../../../../../usr/local/texlive/${YEAR}/texmf-dist/doc/man /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Man
-	ln -s ../../../../../../usr/local/texlive/${YEAR} /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Root
-	ln -s ../../../../../../usr/local/texlive/texmf-local /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/TexmfLocal
-	ln -s ../../../../../../usr/local/texlive/${YEAR}/texmf-var /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/TexmfSysVar
-	ln -s ../../../../../../../usr/local/texlive/${YEAR}/bin/i386-darwin /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Programs/i386
-	ln -s ../../../../../../../usr/local/texlive/${YEAR}/bin/powerpc-darwin /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Programs/powerpc
-	ln -s ../../../../../../../usr/local/texlive/${YEAR}/bin/powerpc-darwin /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Programs/ppc
-	ln -s ../../../../../../../usr/local/texlive/${YEAR}/bin/x86_64-darwinlegacy /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Programs/x86_64-legacy
-	ln -s ../../../../../../../usr/local/texlive/${YEAR}/bin/x86_64-darwin /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Programs/x86_64
-	ln -s ../../../../../../../usr/local/texlive/${YEAR}/texmf-dist/doc /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Doc/texmf-dist-doc
-	ln -s ../../../../../../../usr/local/texlive/${YEAR}/texmf-dist/doc /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Doc/texmf-doc
-	ln -s ../../../../../../../usr/local/texlive/${YEAR}/texmf-dist/doc /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Doc/texmf-doc-doc
-	ln -s ../../../../../../../usr/local/texlive/${YEAR}/texmf-dist/doc /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Doc/texmf-var-doc
-	ln -s ../../../../../../../usr/local/texlive/${YEAR}/texmf-dist /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/AllTexmf/texmf
-	ln -s ../../../../../../../usr/local/texlive/${YEAR}/texmf-dist /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/AllTexmf/texmf-dist
-	ln -s ../../../../../../../usr/local/texlive/${YEAR}/texmf-dist/doc /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/AllTexmf/texmf-doc
-	ln -s ../../../../../../../usr/local/texlive/${YEAR}/texmf-var /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/AllTexmf/texmf-var
-	ln -s ../../../../../../../usr/local/texlive/texmf-local /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/AllTexmf/texmf-local
-	if [[ "$PROCESSOR" == "powerpc" ]]; then
-		echo "### setting program link powerpc"
-		ln -s powerpc  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Programs/texbin
+TL_DIR="/Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}"
+TL_LINK="../../../../../../usr/local/texlive"
+TL_LINK_YEAR="${TL_LINK}/${YEAR}"
+TL_LINK_LOCAL="${TL_LINK}/texmf-local"
+
+if [[ ! -d "$TL_DIR" ]]; then
+	mkdir -p "${TL_DIR}/Contents/AllTexmf"
+	mkdir -p "${TL_DIR}/Contents/Doc"
+	mkdir -p "${TL_DIR}/Contents/Programs"
+	mkdir -p "${TL_DIR}/Contents/Resources"
+	mkdir -p "${TL_DIR}/Contents/Resources/English.lproj"
+
+	cp ./TeXDistVersion "${TL_DIR}/Contents/TeXDistVersion"
+	chmod 644 "${TL_DIR}/Contents/TeXDistVersion"
+
+	cp ./Description.rtf "${TL_DIR}/Contents/Resources/English.lproj/Description.rtf"
+	chmod 644 "${TL_DIR}/Contents/Resources/English.lproj/Description.rtf"
+
+	ln -s "${TL_LINK_YEAR}/texmf-dist/doc/info"        "${TL_DIR}/Contents/Info"
+	ln -s "${TL_LINK_YEAR}/texmf-dist/doc/man"         "${TL_DIR}/Contents/Man"
+	ln -s "${TL_LINK_YEAR}"                            "${TL_DIR}/Contents/Root"
+	ln -s "${TL_LINK_LOCAL}"                           "${TL_DIR}/Contents/TexmfLocal"
+	ln -s "${TL_LINK_YEAR}/texmf-var"                  "${TL_DIR}/Contents/TexmfSysVar"
+	ln -s "../${TL_LINK_YEAR}/bin/i386-darwin"         "${TL_DIR}/Contents/Programs/i386"
+	ln -s "../${TL_LINK_YEAR}/bin/powerpc-darwin"      "${TL_DIR}/Contents/Programs/powerpc"
+	ln -s "../${TL_LINK_YEAR}/bin/powerpc-darwin"      "${TL_DIR}/Contents/Programs/ppc"
+	ln -s "../${TL_LINK_YEAR}/bin/x86_64-darwinlegacy" "${TL_DIR}/Contents/Programs/x86_64-legacy"
+	if [[ "$SYSVERSION" -le "$LEGACY_SYSVERSION" ]]; then
+		ln -s x86_64-legacy "${TL_DIR}/Contents/Programs/x86_64"
+	else
+		ln -s "../${TL_LINK_YEAR}/bin/x86_64-darwin" "${TL_DIR}/Contents/Programs/x86_64"
 	fi
-	if [[ "$PROCESSOR" == "i386" ]]; then
-		echo "### setting program link i386"
-		ln -s i386  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Programs/texbin
-	fi
-#	cp ./PrefPane/Info.plist /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Info.plist
-#	chmod 644 /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Info.plist
+	ln -s "../${TL_LINK_YEAR}/texmf-dist/doc"          "${TL_DIR}/Contents/Doc/texmf-dist-doc"
+	ln -s "../${TL_LINK_YEAR}/texmf-dist/doc"          "${TL_DIR}/Contents/Doc/texmf-doc"
+	ln -s "../${TL_LINK_YEAR}/texmf-dist/doc"          "${TL_DIR}/Contents/Doc/texmf-doc-doc"
+	ln -s "../${TL_LINK_YEAR}/texmf-dist/doc"          "${TL_DIR}/Contents/Doc/texmf-var-doc"
+	ln -s "../${TL_LINK_YEAR}/texmf-dist"              "${TL_DIR}/Contents/AllTexmf/texmf"
+	ln -s "../${TL_LINK_YEAR}/texmf-dist"              "${TL_DIR}/Contents/AllTexmf/texmf-dist"
+	ln -s "../${TL_LINK_YEAR}/texmf-dist/doc"          "${TL_DIR}/Contents/AllTexmf/texmf-doc"
+	ln -s "../${TL_LINK_YEAR}/texmf-var"               "${TL_DIR}/Contents/AllTexmf/texmf-var"
+	ln -s "../${TL_LINK_LOCAL}"                        "${TL_DIR}/Contents/AllTexmf/texmf-local"
+
+#	cp ./PrefPane/Info.plist "${TL_DIR}/Contents/Info.plist"
+#	chmod 644 "${TL_DIR}/Contents/Info.plist"
 fi
 
-
-
-# activate 64 bit data structure if machine is 64 bit capable and operating system is at least Snow Leopard
-
-# Snow Leopard test
-if [[ `/usr/bin/uname -r | /usr/bin/cut -f 1 -d .` -lt 10 ]]; then
-	exit 0
-fi
-
-# 64 bit test
-if [[ `/usr/sbin/sysctl hw.cpu64bit_capable | /usr/bin/cut -b 22` -lt 1 ]]; then
-	exit 0
-fi
-
-# Activate 64 bits
-
-rm  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Programs/texbin
-
-if  [[ `/usr/bin/uname -r | /usr/bin/cut -f 1 -d .` -lt 16 ]]; then
-ln -s x86_64-legacy  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Programs/texbin
-	exit 0
-fi
-
-ln -s x86_64  /Library/TeX/Distributions/.FactoryDefaults/TeXLive-${YEAR}/Contents/Programs/texbin
-
-exit 0
+echo "### setting program link ${PROCESSOR_LINK}"
+ln -s "$PROCESSOR" "${TL_DIR}/Contents/Programs/texbin"
